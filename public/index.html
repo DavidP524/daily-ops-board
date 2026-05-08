@@ -104,57 +104,64 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 
     /* ─── Hero ──────────────────────────────────────────────────────────── */
-    .hero { padding: 6px 4px 14px; }
+    .hero { padding: 8px 4px 18px; }
     .hero-kicker {
       color: var(--muted);
-      font-size: 13px;
-      font-weight: 590;
+      font-size: 14px;
+      font-weight: 500;
       letter-spacing: -0.01em;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
     .hero-title {
       margin: 0;
-      font-size: 34px;
+      font-size: 36px;
       font-weight: 800;
-      letter-spacing: -0.035em;
+      letter-spacing: -0.045em;
       line-height: 1.0;
     }
     .hero-sub {
       margin: 8px 0 0;
-      font-size: 14.5px;
+      font-size: 15px;
       color: var(--muted);
       letter-spacing: -0.005em;
+      line-height: 1.35;
     }
-    .hero-sub strong { color: var(--text-2); font-weight: 650; }
+    .hero-sub strong { color: var(--text-2); font-weight: 600; }
 
     /* ─── View pills (My Day / Past Due / Open) ─────────────────────────── */
     .view-pills {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 8px;
-      margin: 14px 0 12px;
+      margin: 16px 0 14px;
     }
     .vp {
-      padding: 12px 10px;
-      border-radius: var(--r-md);
-      background: var(--surface);
-      border: 1px solid var(--border);
+      padding: 14px 12px 12px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      transition: all .18s var(--ease);
+      transition: transform .14s var(--ease), background .18s var(--ease), border-color .18s var(--ease);
       text-align: left;
-      min-height: 64px;
+      min-height: 68px;
     }
-    .vp:active { transform: scale(0.97); }
+    [data-theme="light"] .vp {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(17,24,39,0.06);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+    }
+    .vp:active { transform: scale(0.96); }
     .vp.active {
       background: var(--accent);
       border-color: var(--accent);
       color: #fff;
+      box-shadow: 0 4px 16px rgba(10,132,255,0.30);
     }
     .vp.active .vp-num { color: #fff; }
     .vp.active .vp-label { color: rgba(255,255,255,0.85); }
-    .vp-num { font-size: 22px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--text); }
-    .vp-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 4px; letter-spacing: 0.01em; text-transform: uppercase; }
+    .vp-num { font-size: 26px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; color: var(--text); }
+    .vp-label { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 5px; letter-spacing: 0.01em; }
 
     /* ─── Toolbar (search + filter) ─────────────────────────────────────── */
     .toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -281,18 +288,24 @@
     .swipe-underlay.left svg { margin-right: 0; margin-left: 8px; }
     .task-card {
       position: relative;
-      padding: 14px 16px;
+      padding: 14px 16px 14px 18px;
       padding-right: 56px;
-      border-radius: var(--r-lg);
-      background: var(--surface-2);
-      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.06);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 6px 18px rgba(0,0,0,0.16);
       cursor: pointer;
-      transition: transform .18s var(--ease), background .18s var(--ease);
+      transition: transform .16s var(--ease), background .16s var(--ease), border-color .16s var(--ease);
       z-index: 1;
     }
+    [data-theme="light"] .task-card {
+      background: rgba(255,255,255,0.96);
+      border-color: rgba(17,24,39,0.06);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.04);
+    }
+    .task-card:active { transform: scale(0.98); }
     .task-card::before {
       content: '';
       position: absolute;
@@ -300,17 +313,17 @@
       top: 14px;
       bottom: 14px;
       width: 3px;
-      border-radius: 2px;
+      border-radius: 0 3px 3px 0;
       background: var(--list-color, transparent);
     }
     .task-card.selected { background: var(--surface-3); border-color: var(--accent); }
-    .task-card.done { opacity: 0.55; }
-    .task-card.done .task-title { text-decoration: line-through; }
+    .task-card.done { opacity: 0.5; }
+    .task-card.done .task-title { text-decoration: line-through; text-decoration-color: var(--muted); }
     .task-card.attention::before { background: var(--red); }
     .task-title {
-      font-size: 15.5px;
-      font-weight: 650;
-      letter-spacing: -0.01em;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
       line-height: 1.28;
       color: var(--text);
     }
@@ -373,19 +386,19 @@
       position: fixed;
       bottom: calc(86px + env(safe-area-inset-bottom));
       right: 18px;
-      width: 56px;
-      height: 56px;
+      width: 58px;
+      height: 58px;
       border-radius: 999px;
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 8px 24px rgba(10,132,255,0.45), 0 2px 4px rgba(0,0,0,0.18);
+      box-shadow: 0 8px 28px rgba(10,132,255,0.50), 0 2px 6px rgba(0,0,0,0.20), 0 0 0 0.5px rgba(255,255,255,0.12) inset;
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 50;
       transition: transform .14s var(--ease), box-shadow .14s var(--ease);
     }
-    .fab:active { transform: scale(0.92); box-shadow: 0 4px 14px rgba(10,132,255,0.5); }
+    .fab:active { transform: scale(0.90); box-shadow: 0 4px 14px rgba(10,132,255,0.50); }
     .fab svg { width: 26px; height: 26px; stroke-width: 2.4; }
 
     /* ─── Bottom nav ─────────────────────────────────────────────────── */
@@ -394,34 +407,38 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: calc(70px + env(safe-area-inset-bottom));
-      padding: 6px 8px env(safe-area-inset-bottom);
-      background: rgba(7,10,18,0.78);
-      border-top: 1px solid var(--border);
-      backdrop-filter: blur(28px) saturate(180%);
-      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      height: calc(72px + env(safe-area-inset-bottom));
+      padding: 8px 8px env(safe-area-inset-bottom);
+      background: rgba(7,10,18,0.72);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
       display: flex;
       justify-content: space-around;
       align-items: stretch;
       z-index: 100;
     }
-    [data-theme="light"] .bottom-nav { background: rgba(245,245,247,0.86); }
+    [data-theme="light"] .bottom-nav {
+      background: rgba(245,245,247,0.82);
+      border-top-color: rgba(17,24,39,0.08);
+    }
     .bnav-btn {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       color: var(--muted);
       font-size: 10.5px;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      transition: color .14s var(--ease);
+      font-weight: 500;
+      letter-spacing: 0.01em;
+      transition: color .14s var(--ease), transform .12s var(--ease);
     }
-    .bnav-btn svg { width: 24px; height: 24px; stroke-width: 1.9; }
+    .bnav-btn svg { width: 25px; height: 25px; stroke-width: 1.8; }
     .bnav-btn.active { color: var(--accent); }
-    .bnav-btn:active { transform: scale(0.94); }
+    .bnav-btn.active svg { stroke-width: 2.0; }
+    .bnav-btn:active { transform: scale(0.92); }
 
     /* ─── Bottom sheets ────────────────────────────────────────────────── */
     .sheet-overlay {
@@ -441,51 +458,70 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: var(--surface-2);
-      background-image: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.0)),
-                        var(--bg-grad);
-      border-radius: 24px 24px 0 0;
+      background: rgba(20,22,30,0.85);
+      background-image: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.0) 240px);
+      backdrop-filter: blur(40px) saturate(180%);
+      -webkit-backdrop-filter: blur(40px) saturate(180%);
+      border-radius: 22px 22px 0 0;
       max-height: 92vh;
       display: flex;
       flex-direction: column;
       transform: translateY(100%);
-      transition: transform .32s var(--ease);
-      box-shadow: var(--shadow-sheet);
-      border-top: 1px solid var(--border);
+      transition: transform .42s cubic-bezier(0.32, 0.72, 0, 1);
+      box-shadow: 0 -1px 0 rgba(255,255,255,0.06), var(--shadow-sheet);
+      border-top: 1px solid rgba(255,255,255,0.10);
+      will-change: transform;
     }
     [data-theme="light"] .sheet {
-      background: rgba(252,253,255,0.97);
-      background-image: none;
+      background: rgba(248,249,251,0.86);
+      background-image: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65) 240px);
+      border-top-color: rgba(17,24,39,0.10);
+      box-shadow: 0 -1px 0 rgba(255,255,255,0.6), 0 -16px 48px rgba(15,23,42,0.10);
     }
     .sheet-overlay.open .sheet { transform: translateY(0); }
+    .sheet.dragging { transition: none !important; }
+    .sheet-grip {
+      flex-shrink: 0;
+      padding: 10px 0 4px;
+      display: flex;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+    }
+    .sheet-grip:active { cursor: grabbing; }
     .sheet-handle {
-      width: 38px;
+      width: 36px;
       height: 5px;
       background: var(--border-2);
       border-radius: 3px;
-      margin: 10px auto 4px;
-      flex-shrink: 0;
+      transition: background .14s var(--ease);
     }
+    .sheet-grip:active .sheet-handle,
+    .sheet.dragging .sheet-handle { background: var(--accent); }
     .sheet-head {
-      padding: 6px 18px 10px;
+      padding: 4px 18px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
       flex-shrink: 0;
+      touch-action: none;
     }
     .sheet-head h2 {
       margin: 0;
-      font-size: 19px;
-      font-weight: 750;
+      font-size: 22px;
+      font-weight: 700;
       letter-spacing: -0.025em;
     }
     .sheet-close {
       width: 30px; height: 30px; border-radius: 999px;
-      background: var(--surface-3);
-      color: var(--text-2);
+      background: rgba(255,255,255,0.10);
+      color: var(--muted);
       display: flex; align-items: center; justify-content: center;
+      transition: background .14s var(--ease);
     }
+    [data-theme="light"] .sheet-close { background: rgba(17,24,39,0.06); }
+    .sheet-close:active { background: rgba(255,255,255,0.16); }
     .sheet-close svg { width: 14px; height: 14px; stroke-width: 2.4; }
     .sheet-body {
       flex: 1;
@@ -495,16 +531,19 @@
     }
     .sheet-actions {
       flex-shrink: 0;
-      padding: 12px 18px calc(14px + env(safe-area-inset-bottom));
-      border-top: 1px solid var(--border);
-      background: rgba(7,10,18,0.6);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+      padding: 14px 18px calc(16px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(20,22,30,0.50);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
       display: grid;
       grid-template-columns: 1fr 1.4fr;
-      gap: 9px;
+      gap: 10px;
     }
-    [data-theme="light"] .sheet-actions { background: rgba(252,253,255,0.85); }
+    [data-theme="light"] .sheet-actions {
+      background: rgba(248,249,251,0.55);
+      border-top-color: rgba(17,24,39,0.06);
+    }
     .sheet-actions.single { grid-template-columns: 1fr; }
     .sheet-actions.triple { grid-template-columns: 1fr 1fr 1fr; }
 
@@ -522,48 +561,66 @@
     .field-hint { color: var(--muted); font-size: 12.5px; line-height: 1.35; margin-top: 6px; }
     .input, select.input, textarea.input {
       width: 100%;
-      background: var(--surface);
+      background: rgba(255,255,255,0.05);
       color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: var(--r-md);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
       outline: none;
       font-size: 16px;
-      padding: 0 13px;
-      height: 46px;
-      transition: border-color .14s, box-shadow .14s;
+      padding: 0 14px;
+      height: 48px;
+      transition: border-color .14s, box-shadow .14s, background .14s;
     }
-    textarea.input { min-height: 110px; padding: 12px 13px; resize: vertical; line-height: 1.45; height: auto; }
+    [data-theme="light"] .input,
+    [data-theme="light"] select.input,
+    [data-theme="light"] textarea.input {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(17,24,39,0.07);
+    }
+    textarea.input { min-height: 110px; padding: 12px 14px; resize: vertical; line-height: 1.45; height: auto; }
     .input:focus, select.input:focus, textarea.input:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-soft);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+      background: rgba(255,255,255,0.08);
+    }
+    [data-theme="light"] .input:focus, [data-theme="light"] select.input:focus, [data-theme="light"] textarea.input:focus {
+      background: #fff;
     }
     .input.title-large {
-      height: 52px;
-      font-size: 19px;
-      font-weight: 650;
-      letter-spacing: -0.015em;
+      height: 56px;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.025em;
     }
     .picker-row {
       width: 100%;
-      min-height: 50px;
-      padding: 0 14px;
+      min-height: 52px;
+      padding: 0 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      border-radius: var(--r-md);
-      background: var(--surface);
-      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.06);
       color: var(--text);
       text-align: left;
-      transition: background .14s var(--ease), border-color .14s;
+      transition: background .14s var(--ease), border-color .14s, transform .12s var(--ease);
     }
-    .picker-row:active { background: var(--surface-2); }
-    .picker-row .pr-label { color: var(--muted); font-size: 13px; font-weight: 600; }
-    .picker-row .pr-value { font-size: 15.5px; font-weight: 650; letter-spacing: -0.005em; color: var(--text); }
-    .picker-row .pr-value.muted { color: var(--muted); font-weight: 600; }
+    [data-theme="light"] .picker-row {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(17,24,39,0.07);
+    }
+    .picker-row:active { transform: scale(0.985); background: rgba(255,255,255,0.08); }
+    [data-theme="light"] .picker-row:active { background: rgba(255,255,255,1); }
+    .picker-row .pr-label { color: var(--muted); font-size: 14px; font-weight: 500; letter-spacing: -0.005em; }
+    .picker-row .pr-value { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; color: var(--text); }
+    .picker-row .pr-value.muted { color: var(--muted); font-weight: 400; }
     .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .three-col .picker-row { padding: 0 12px; min-height: 56px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
+    .three-col .picker-row .pr-label { font-size: 12px; }
+    .three-col .picker-row .pr-value { font-size: 15px; }
 
     /* ─── Buttons ──────────────────────────────────────────────────────── */
     .btn {
@@ -673,43 +730,105 @@
     .modal p { margin: 0 0 18px; color: var(--muted); font-size: 14px; line-height: 1.4; }
     .modal .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
 
-    /* ─── Settings sections ────────────────────────────────────────────── */
+    /* ─── Settings sections (iOS-grouped style) ──────────────────────── */
+    .settings-group { margin-bottom: 26px; }
+    .settings-group-title {
+      padding: 0 16px 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
     .settings-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--r-lg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      margin-bottom: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 14px;
       overflow: hidden;
     }
-    .settings-card-head {
-      padding: 14px 16px 10px;
-      font-size: 11.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      color: var(--muted);
+    [data-theme="light"] .settings-card {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(17,24,39,0.06);
+      box-shadow: 0 1px 2px rgba(15,23,42,0.04);
     }
     .settings-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 14px 16px;
-      border-top: 1px solid var(--border);
-      min-height: 56px;
+      padding: 13px 16px;
+      min-height: 52px;
+      position: relative;
     }
-    .settings-row:first-of-type { border-top: 0; }
-    .settings-row .sr-label { font-size: 15.5px; font-weight: 600; letter-spacing: -0.005em; color: var(--text); }
-    .settings-row .sr-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
-    .settings-row .sr-value { color: var(--muted); font-size: 14px; font-weight: 600; }
-    .settings-row.tap { transition: background .14s; }
-    .settings-row.tap:active { background: var(--surface-3); }
-    .settings-row.tap .chevron { color: var(--muted-2); }
-    .settings-row.tap .chevron svg { width: 14px; height: 14px; }
-    .settings-input-row { padding: 8px 16px 14px; }
-    .settings-input-row.shown { display: block; }
+    .settings-row + .settings-row::before {
+      content: '';
+      position: absolute;
+      left: 16px;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .settings-row + .settings-row::before {
+      background: rgba(17,24,39,0.06);
+    }
+    .settings-row .sr-label {
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+    .settings-row .sr-sub {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+      line-height: 1.3;
+      letter-spacing: -0.005em;
+    }
+    .settings-row .sr-value {
+      color: var(--muted);
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 180px;
+      text-align: right;
+    }
+    .settings-row.tap {
+      transition: background-color .14s var(--ease);
+      cursor: pointer;
+    }
+    .settings-row.tap:active { background: rgba(255,255,255,0.05); }
+    [data-theme="light"] .settings-row.tap:active { background: rgba(17,24,39,0.04); }
+    .settings-row .chevron-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted-2);
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .settings-row .chevron-wrap svg { width: 13px; height: 13px; stroke-width: 2.4; flex-shrink: 0; }
+    .settings-row > div:first-child { min-width: 0; flex: 1; }
+    .settings-input-row { padding: 4px 16px 14px; }
+    .settings-stat {
+      padding: 22px 16px 26px;
+      text-align: center;
+    }
+    .settings-stat .stat-num {
+      font-size: 38px;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .settings-stat .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+      letter-spacing: -0.005em;
+    }
 
     /* iOS-style switch */
     .switch { position: relative; width: 51px; height: 31px; flex-shrink: 0; }
@@ -736,61 +855,118 @@
     /* List manager */
     .list-row {
       display: grid;
-      grid-template-columns: 14px 1fr auto;
-      gap: 10px;
+      grid-template-columns: 22px 1fr auto;
+      gap: 12px;
       align-items: center;
-      padding: 12px 14px;
-      border-radius: var(--r-md);
-      background: var(--surface);
-      border: 1px solid var(--border);
-      margin-bottom: 8px;
+      padding: 14px 14px 12px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 0;
+      position: relative;
     }
-    .list-row.dragging { opacity: 0.4; }
-    .list-row .ldot {
-      width: 10px; height: 10px; border-radius: 999px;
+    [data-theme="light"] .list-row { background: rgba(255,255,255,0.65); }
+    .list-row + .list-row::before {
+      content: '';
+      position: absolute;
+      left: 48px;
+      right: 0;
+      top: 0;
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+    }
+    [data-theme="light"] .list-row + .list-row::before { background: rgba(17,24,39,0.06); }
+    .list-row .ldot-btn {
+      width: 22px; height: 22px;
+      border-radius: 999px;
       background: var(--ldot, var(--muted));
+      border: 2px solid rgba(255,255,255,0.18);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: transform .14s var(--ease);
     }
+    .list-row .ldot-btn:active { transform: scale(0.88); }
     .list-row .lname-input {
-      flex: 1;
       background: transparent;
       border: 0;
       outline: none;
-      font-size: 15px;
-      font-weight: 650;
+      font-size: 16px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
       color: var(--text);
-      padding: 4px 0;
+      padding: 0;
+      width: 100%;
     }
+    .list-row .lname-input:disabled { color: var(--text); opacity: 1; }
     .list-row .lname-input:focus { color: var(--accent); }
-    .list-row .lactions { display: flex; gap: 5px; }
+    .list-row .lactions { display: flex; gap: 4px; align-items: center; }
     .list-row .lbtn {
-      width: 30px; height: 30px;
-      border-radius: 9px;
-      background: var(--surface-3);
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: transparent;
       color: var(--muted);
       display: flex; align-items: center; justify-content: center;
-      font-size: 14px;
       transition: background .14s;
     }
-    .list-row .lbtn.danger { color: var(--red); background: var(--red-soft); }
-    .list-row .lbtn:active { background: var(--surface-2); }
-    .color-grid {
-      display: grid;
-      grid-template-columns: repeat(8, 1fr);
-      gap: 6px;
-      margin-top: 8px;
-      padding-top: 6px;
-      border-top: 1px solid var(--border);
+    .list-row .lbtn:active { background: rgba(255,255,255,0.08); }
+    [data-theme="light"] .list-row .lbtn:active { background: rgba(17,24,39,0.06); }
+    .list-row .lbtn.danger { color: var(--red); }
+    .list-row .lbtn svg { width: 16px; height: 16px; stroke-width: 2.2; }
+    .list-row .lbtn.disabled { opacity: 0.25; pointer-events: none; }
+    .list-add-row {
+      display: flex;
+      gap: 9px;
+      align-items: center;
+      margin-top: 10px;
     }
-    .color-grid .cc {
+
+    /* Color picker popover */
+    .color-popover {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      padding: 16px;
+      background: var(--surface);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .color-popover .cc {
       width: 100%;
       aspect-ratio: 1;
       border-radius: 999px;
       background: var(--cc-bg);
       border: 2px solid transparent;
-      transition: transform .12s, border-color .14s;
+      transition: transform .14s var(--ease), border-color .14s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
     }
-    .color-grid .cc.active { border-color: #fff; transform: scale(1.1); }
-    [data-theme="light"] .color-grid .cc.active { border-color: var(--text); }
+    .color-popover .cc.active {
+      border-color: var(--text);
+      transform: scale(1.12);
+    }
+    .color-popover .cc.custom {
+      background: conic-gradient(from 0deg, #ff453a, #ff9f0a, #ffd60a, #30d158, #0a84ff, #5e5ce6, #bf5af2, #ff2d55, #ff453a);
+      position: relative;
+      cursor: pointer;
+    }
+    .color-popover .cc.custom::after {
+      content: '+';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 22px;
+      font-weight: 300;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    }
+    .hidden-color-input {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
 
     /* ─── Activity log ────────────────────────────────────────────────── */
     .activity-row {
@@ -1211,7 +1387,7 @@
   <!-- ─── Add Task Sheet ───────────────────────────────────────────── -->
   <div class="sheet-overlay" id="addSheetOverlay">
     <div class="sheet">
-      <div class="sheet-handle"></div>
+      <div class="sheet-grip"><div class="sheet-handle"></div></div>
       <div class="sheet-head">
         <h2>New Task</h2>
         <button class="sheet-close tappable" data-close="addSheetOverlay">
@@ -1274,7 +1450,7 @@
   <!-- ─── Task Detail Sheet ───────────────────────────────────────── -->
   <div class="sheet-overlay" id="detailOverlay">
     <div class="sheet">
-      <div class="sheet-handle"></div>
+      <div class="sheet-grip"><div class="sheet-handle"></div></div>
       <div class="sheet-head">
         <h2 id="detailHeadTitle">Task</h2>
         <button class="sheet-close tappable" data-close="detailOverlay">
@@ -1292,7 +1468,7 @@
   <!-- ─── Generic Picker Sheet (date / time / list / reminder / repeat) ── -->
   <div class="sheet-overlay" id="pickerOverlay" style="z-index: 300;">
     <div class="sheet">
-      <div class="sheet-handle"></div>
+      <div class="sheet-grip"><div class="sheet-handle"></div></div>
       <div class="sheet-head">
         <h2 id="pickerTitle">Choose</h2>
         <button class="sheet-close tappable" data-close="pickerOverlay">
@@ -1310,7 +1486,7 @@
   <!-- ─── Settings Sheet ──────────────────────────────────────────── -->
   <div class="sheet-overlay" id="settingsOverlay">
     <div class="sheet">
-      <div class="sheet-handle"></div>
+      <div class="sheet-grip"><div class="sheet-handle"></div></div>
       <div class="sheet-head">
         <h2>Settings</h2>
         <button class="sheet-close tappable" data-close="settingsOverlay">
@@ -1340,17 +1516,44 @@
     };
 
     /* ─── State ──────────────────────────────────────────────────────── */
-    const COLOR_PALETTE = {
-      gray:   '#8e8e93',
-      red:    '#ff453a',
-      orange: '#ff9f0a',
-      yellow: '#ffd60a',
-      green:  '#30d158',
-      blue:   '#0a84ff',
-      purple: '#bf5af2',
-      pink:   '#ff375f',
+    // Quick swatches for the popover. Color values are stored directly as hex
+    // strings on each list now, so users can pick any colour from the wheel.
+    const COLOR_SWATCHES = [
+      '#8e8e93', // gray
+      '#ff453a', // red
+      '#ff9500', // orange
+      '#ffcc00', // yellow
+      '#30d158', // green
+      '#5ac8fa', // teal
+      '#0a84ff', // blue
+      '#5e5ce6', // indigo
+      '#bf5af2', // purple
+      '#ff2d55', // pink
+      '#a2845e', // brown
+      '#34c759', // mint
+      '#64d2ff', // sky
+      '#ffd60a', // bright yellow
+    ];
+    // Legacy named-color → hex shim so older saved data keeps working
+    const LEGACY_NAMED_COLORS = {
+      gray: '#8e8e93', red: '#ff453a', orange: '#ff9f0a', yellow: '#ffd60a',
+      green: '#30d158', blue: '#0a84ff', purple: '#bf5af2', pink: '#ff375f',
+      teal: '#5ac8fa', indigo: '#5e5ce6', brown: '#a2845e', mint: '#34c759',
     };
-    const COLOR_KEYS = Object.keys(COLOR_PALETTE);
+    function normalizeColor(v) {
+      if (!v) return '#8e8e93';
+      if (typeof v !== 'string') return '#8e8e93';
+      if (v[0] === '#') return v;
+      if (LEGACY_NAMED_COLORS[v]) return LEGACY_NAMED_COLORS[v];
+      return '#8e8e93';
+    }
+    function isRedish(hex) {
+      if (!hex || hex[0] !== '#') return false;
+      const r = parseInt(hex.slice(1,3), 16);
+      const g = parseInt(hex.slice(3,5), 16);
+      const b = parseInt(hex.slice(5,7), 16);
+      return r > 200 && g < 120 && b < 120;
+    }
 
     let tasks = loadJSON(KEYS.tasks, []);
     let customLists = loadJSON(KEYS.lists, ['General','Urgent','Follow Up','Waiting On','Backlog']);
@@ -1431,8 +1634,9 @@
     function repeatLabel(r) {
       return ({none:'No repeat', daily:'Every day', weekly:'Every week', monthly:'Every month', weekdays:'Every weekday', monday:'Every Monday', customDays:'Every X days'})[r] || 'No repeat';
     }
-    function listColor(name) { return COLOR_PALETTE[listColors[name] || 'gray']; }
-    function listColorKey(name) { return listColors[name] || 'gray'; }
+    function listColor(name) { return normalizeColor(listColors[name]); }
+    function listColorKey(name) { return listColor(name); }
+    function isAttentionList(name) { return isRedish(listColor(name)); }
 
     /* ─── Toast & Confirm ─────────────────────────────────────────────── */
     const toastEl = document.getElementById('toast');
@@ -1468,12 +1672,84 @@
     }
 
     /* ─── Sheet helpers ──────────────────────────────────────────────── */
-    function openSheet(id) { document.getElementById(id).classList.add('open'); }
+    function openSheet(id) {
+      const overlay = document.getElementById(id);
+      overlay.classList.add('open');
+      // Reset any drag state on open
+      const sheet = overlay.querySelector('.sheet');
+      if (sheet) { sheet.style.transform = ''; sheet.classList.remove('dragging'); }
+    }
     function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
     document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.dataset.close)));
     document.querySelectorAll('.sheet-overlay').forEach(o => o.addEventListener('click', e => {
       if (e.target === o) closeSheet(o.id);
     }));
+
+    /* ─── Sheet drag-to-dismiss ────────────────────────────────────── */
+    function wireSheetDrag(overlayId) {
+      const overlay = document.getElementById(overlayId);
+      if (!overlay) return;
+      const sheet = overlay.querySelector('.sheet');
+      const grip  = overlay.querySelector('.sheet-grip');
+      const head  = overlay.querySelector('.sheet-head');
+      if (!sheet || !grip) return;
+
+      let startY = 0, lastY = 0, dy = 0, startTime = 0, dragging = false;
+
+      function onStart(e) {
+        const t = e.touches ? e.touches[0] : e;
+        // If body or actions are scrolling content, don't start drag (only handle/head)
+        startY = lastY = t.clientY;
+        dy = 0;
+        startTime = performance.now();
+        dragging = true;
+        sheet.classList.add('dragging');
+      }
+      function onMove(e) {
+        if (!dragging) return;
+        const t = e.touches ? e.touches[0] : e;
+        lastY = t.clientY;
+        dy = Math.max(0, lastY - startY);
+        sheet.style.transform = `translateY(${dy}px)`;
+        // Fade overlay slightly as we drag
+        const fade = Math.max(0.2, 1 - dy / 600);
+        overlay.style.background = `rgba(0,0,0,${0.5 * fade})`;
+        if (e.cancelable) e.preventDefault();
+      }
+      function onEnd() {
+        if (!dragging) return;
+        dragging = false;
+        sheet.classList.remove('dragging');
+        const elapsed = performance.now() - startTime;
+        const velocity = dy / Math.max(elapsed, 1); // px/ms
+        const sheetH = sheet.offsetHeight || 600;
+        const shouldClose = dy > sheetH * 0.30 || (dy > 50 && velocity > 0.5);
+        sheet.style.transform = '';
+        overlay.style.background = '';
+        if (shouldClose) closeSheet(overlayId);
+      }
+
+      [grip, head].forEach(el => {
+        if (!el) return;
+        el.addEventListener('touchstart', onStart, { passive: true });
+        el.addEventListener('touchmove', onMove, { passive: false });
+        el.addEventListener('touchend', onEnd);
+        el.addEventListener('touchcancel', onEnd);
+        // Mouse for desktop testing
+        el.addEventListener('mousedown', e => {
+          onStart(e);
+          const moveH = ev => onMove(ev);
+          const upH = () => {
+            onEnd();
+            window.removeEventListener('mousemove', moveH);
+            window.removeEventListener('mouseup', upH);
+          };
+          window.addEventListener('mousemove', moveH);
+          window.addEventListener('mouseup', upH);
+        });
+      });
+    }
+    ['addSheetOverlay','detailOverlay','pickerOverlay','settingsOverlay'].forEach(wireSheetDrag);
 
     /* ─── Sync layer (best-effort, optional) ─────────────────────────── */
     async function api(path, opts) {
@@ -1551,7 +1827,7 @@
     function isOverdue(t) { return !isDone(t) && t.dueDate && t.dueDate < todayStr(); }
     function isToday(t) { return !isDone(t) && t.dueDate === todayStr(); }
     function isMyDay(t) { return !isDone(t) && (t.pinnedToday || isToday(t) || isOverdue(t)); }
-    function isAttention(t) { return !isDone(t) && (isOverdue(t) || listColorKey(t.list) === 'red'); }
+    function isAttention(t) { return !isDone(t) && (isOverdue(t) || isAttentionList(t.list)); }
 
     function filterByView(t, view) {
       if (view === 'My Day')      return isMyDay(t);
@@ -1569,7 +1845,7 @@
       if (isToday(t))      s -= 5000;
       if (t.pinnedToday)   s -= 2500;
       if (t.priority === 'High') s -= 900;
-      if (listColorKey(t.list) === 'red') s -= 600;
+      if (isAttentionList(t.list)) s -= 600;
       if (t.dueDate) s += new Date(t.dueDate + 'T00:00:00').getTime() / 1e8;
       if (t.reminderTime) {
         const [hh, mm] = t.reminderTime.split(':').map(Number);
@@ -2501,142 +2777,144 @@
       }
     });
 
-    /* ─── Settings sheet body ────────────────────────────────────────── */
+    /* ─── Settings sheet body (iOS-grouped style) ───────────────────── */
     function renderSettingsBody(target) {
+      const chev = '<span class="chevron-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>';
+      const themeName = document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark';
       target.innerHTML = `
-        <div class="settings-card">
-          <div class="settings-card-head">Profile</div>
-          <div class="settings-row">
-            <div>
-              <div class="sr-label">Your Name</div>
-              <div class="sr-sub">Personalises the app title.</div>
+        <div class="settings-group">
+          <div class="settings-group-title">Profile</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <div>
+                <div class="sr-label">Your Name</div>
+                <div class="sr-sub">Personalises the greeting.</div>
+              </div>
             </div>
-          </div>
-          <div class="settings-input-row">
-            <input id="setUserName" class="input" placeholder="e.g. David" value="${escapeHtml(userName)}" />
-          </div>
-          <div class="settings-row tap" id="setThemeRow">
-            <div>
+            <div class="settings-input-row">
+              <input id="setUserName" class="input" placeholder="e.g. David" value="${escapeHtml(userName)}" />
+            </div>
+            <div class="settings-row tap" id="setThemeRow">
               <div class="sr-label">Appearance</div>
-              <div class="sr-sub">Light or dark.</div>
+              <div class="chevron-wrap"><span class="sr-value">${themeName}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
             </div>
-            <div class="sr-value">${document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark'}</div>
           </div>
         </div>
 
-        <div class="settings-card">
-          <div class="settings-card-head">Defaults</div>
-          <div class="settings-row tap" id="setDefaultListRow">
-            <div>
+        <div class="settings-group">
+          <div class="settings-group-title">Defaults</div>
+          <div class="settings-card">
+            <div class="settings-row tap" id="setDefaultListRow">
               <div class="sr-label">Default List</div>
-              <div class="sr-sub">Pre-selected when adding a task.</div>
+              <div class="chevron-wrap"><span class="sr-value">${escapeHtml(taskDefaults.list || 'General')}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
             </div>
-            <div class="sr-value">${escapeHtml(taskDefaults.list || 'General')}</div>
-          </div>
-          <div class="settings-row tap" id="setDefaultPriorityRow">
-            <div>
+            <div class="settings-row tap" id="setDefaultPriorityRow">
               <div class="sr-label">Default Priority</div>
+              <div class="chevron-wrap"><span class="sr-value">${escapeHtml(taskDefaults.priority || 'Normal')}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
             </div>
-            <div class="sr-value">${escapeHtml(taskDefaults.priority || 'Normal')}</div>
-          </div>
-          <div class="settings-row tap" id="setDefaultLeadRow">
-            <div>
-              <div class="sr-label">Default Reminder</div>
-              <div class="sr-sub">Used when a task has a time set.</div>
-            </div>
-            <div class="sr-value">${escapeHtml(reminderValueLabel(reminderSettings.reminder_lead_minutes ?? '0'))}</div>
-          </div>
-        </div>
-
-        <div class="settings-card">
-          <div class="settings-card-head">Notifications</div>
-          <div class="settings-row">
-            <div>
-              <div class="sr-label">Push Notifications</div>
-              <div class="sr-sub" id="pushSubLine">Required for nudges that wake your phone.</div>
-            </div>
-            <button class="btn small primary" id="enablePushBtn">Enable</button>
-          </div>
-          <div class="settings-row">
-            <div>
-              <div class="sr-label">Send test push</div>
-              <div class="sr-sub">Test that notifications fire on this device.</div>
-            </div>
-            <button class="btn small ghost" id="testPushBtn">Test</button>
-          </div>
-          <div id="pushStatusText"></div>
-          <div class="settings-row">
-            <div>
-              <div class="sr-label">Reminders</div>
-              <div class="sr-sub">Master switch for time-based reminders.</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="setRemEnabled" ${reminderSettings.reminders_enabled === 'true' ? 'checked' : ''} />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="settings-row tap" id="setNudgeRow">
-            <div>
-              <div class="sr-label">Nudge Cadence</div>
-              <div class="sr-sub">Re-fire every <strong>${escapeHtml(reminderSettings.nudge_interval_minutes || '5')} min</strong>, max <strong>${escapeHtml(reminderSettings.max_nudges || '6')}</strong> nudges.</div>
-            </div>
-            <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
-          </div>
-          <div class="settings-row">
-            <div>
-              <div class="sr-label">Quiet Hours</div>
-              <div class="sr-sub">${reminderSettings.quiet_hours_enabled === 'true' ? `${reminderSettings.quiet_hours_start} – ${reminderSettings.quiet_hours_end}` : 'No nudges during your sleep window.'}</div>
-            </div>
-            <label class="switch">
-              <input type="checkbox" id="setQuietEnabled" ${reminderSettings.quiet_hours_enabled === 'true' ? 'checked' : ''} />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div id="quietHoursRow" class="settings-row" style="${reminderSettings.quiet_hours_enabled === 'true' ? '' : 'display:none'}">
-            <div>
-              <div class="sr-label" style="font-weight:600; font-size:14px;">Window</div>
-            </div>
-            <div class="row">
-              <input type="time" id="setQuietStart" class="input" value="${escapeHtml(reminderSettings.quiet_hours_start || '22:00')}" style="width:110px; height:38px;" />
-              <span style="color:var(--muted);">to</span>
-              <input type="time" id="setQuietEnd" class="input" value="${escapeHtml(reminderSettings.quiet_hours_end || '07:00')}" style="width:110px; height:38px;" />
+            <div class="settings-row tap" id="setDefaultLeadRow">
+              <div>
+                <div class="sr-label">Default Reminder</div>
+                <div class="sr-sub">Used when a task has a time set.</div>
+              </div>
+              <div class="chevron-wrap"><span class="sr-value">${escapeHtml(reminderValueLabel(reminderSettings.reminder_lead_minutes ?? '0'))}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
             </div>
           </div>
         </div>
 
-        <div class="settings-card">
-          <div class="settings-card-head">Lists</div>
-          <div style="padding: 12px 16px;">
-            <div id="listManager"></div>
-            <div class="row" style="margin-top:8px">
-              <input id="setNewListName" class="input grow" placeholder="New list name" />
-              <button class="btn primary small" id="setAddListBtn" style="height:44px;">Add</button>
+        <div class="settings-group">
+          <div class="settings-group-title">Notifications</div>
+          <div class="settings-card">
+            <div class="settings-row">
+              <div>
+                <div class="sr-label">Push Notifications</div>
+                <div class="sr-sub" id="pushSubLine">Required for nudges that wake your phone.</div>
+              </div>
+              <button class="btn small primary" id="enablePushBtn">Enable</button>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="sr-label">Send test</div>
+                <div class="sr-sub">Verify notifications work on this device.</div>
+              </div>
+              <button class="btn small ghost" id="testPushBtn">Test</button>
+            </div>
+            <div id="pushStatusRow" class="settings-row" style="display:none">
+              <div id="pushStatusText" style="flex:1; text-align:center; font-size:13px; color: var(--muted);"></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="sr-label">Reminders</div>
+                <div class="sr-sub">Master switch for time-based alerts.</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setRemEnabled" ${reminderSettings.reminders_enabled === 'true' ? 'checked' : ''} />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="settings-row tap" id="setNudgeRow">
+              <div>
+                <div class="sr-label">Nudge Cadence</div>
+                <div class="sr-sub">Re-fire every <strong>${escapeHtml(reminderSettings.nudge_interval_minutes || '5')} min</strong>, max <strong>${escapeHtml(reminderSettings.max_nudges || '6')}</strong>.</div>
+              </div>
+              <div class="chevron-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+            </div>
+            <div class="settings-row">
+              <div>
+                <div class="sr-label">Quiet Hours</div>
+                <div class="sr-sub">${reminderSettings.quiet_hours_enabled === 'true' ? `${formatTimeLabel(reminderSettings.quiet_hours_start)} – ${formatTimeLabel(reminderSettings.quiet_hours_end)}` : 'No nudges during sleep window.'}</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="setQuietEnabled" ${reminderSettings.quiet_hours_enabled === 'true' ? 'checked' : ''} />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div id="quietHoursRow" class="settings-row" style="${reminderSettings.quiet_hours_enabled === 'true' ? '' : 'display:none'}">
+              <div class="sr-label">Window</div>
+              <div class="row">
+                <input type="time" id="setQuietStart" class="input" value="${escapeHtml(reminderSettings.quiet_hours_start || '22:00')}" style="width:108px; height:36px; font-size:14px; padding: 0 10px;" />
+                <span style="color:var(--muted); font-size:13px;">to</span>
+                <input type="time" id="setQuietEnd" class="input" value="${escapeHtml(reminderSettings.quiet_hours_end || '07:00')}" style="width:108px; height:36px; font-size:14px; padding: 0 10px;" />
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="settings-card">
-          <div class="settings-card-head">Data</div>
-          <div class="settings-row tap" id="setExportRow">
-            <div>
-              <div class="sr-label">Backup JSON</div>
-              <div class="sr-sub">Save a copy of all tasks and lists.</div>
-            </div>
-            <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
-          </div>
-          <div class="settings-row tap" id="setImportRow">
-            <div>
-              <div class="sr-label">Import</div>
-              <div class="sr-sub">Restore from a backup file.</div>
-            </div>
-            <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
+        <div class="settings-group">
+          <div class="settings-group-title">Lists</div>
+          <div id="listManager"></div>
+          <div class="list-add-row" style="padding: 0 4px;">
+            <input id="setNewListName" class="input grow" placeholder="New list name" style="height:44px;" />
+            <button class="btn primary small" id="setAddListBtn" style="height:44px;">Add</button>
           </div>
         </div>
 
-        <div class="settings-card">
-          <div style="padding: 16px; text-align:center;">
-            <div style="font-size:30px; font-weight:800; letter-spacing:-0.03em; color: var(--accent);">${completedCount}</div>
-            <div class="sr-sub" style="margin-top:4px;">tasks completed in The Playbook</div>
+        <div class="settings-group">
+          <div class="settings-group-title">Data</div>
+          <div class="settings-card">
+            <div class="settings-row tap" id="setExportRow">
+              <div>
+                <div class="sr-label">Backup</div>
+                <div class="sr-sub">Save tasks, lists, and settings to a file.</div>
+              </div>
+              ${chev}
+            </div>
+            <div class="settings-row tap" id="setImportRow">
+              <div>
+                <div class="sr-label">Restore</div>
+                <div class="sr-sub">Import a backup file.</div>
+              </div>
+              ${chev}
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-group">
+          <div class="settings-card">
+            <div class="settings-stat">
+              <div class="stat-num">${completedCount}</div>
+              <div class="stat-label">tasks completed in The Playbook</div>
+            </div>
           </div>
         </div>
         <div style="height:16px"></div>
@@ -2710,7 +2988,7 @@
         if (!name) return;
         if (customLists.includes(name)) return showToast('That list already exists');
         customLists.push(name);
-        listColors[name] = 'gray';
+        listColors[name] = '#8e8e93';
         saveLists();
         syncListsReplace();
         inp.value = '';
@@ -2725,23 +3003,20 @@
     }
 
     function renderListManager(target) {
-      target.innerHTML = customLists.map((name, idx) => {
-        const cur = listColorKey(name);
-        return `<div class="list-row" data-name="${escapeHtml(name)}" data-idx="${idx}">
-          <span class="ldot" style="--ldot:${listColor(name)}"></span>
+      const arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>';
+      const arrowDownSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+      const trashSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      target.innerHTML = `<div class="settings-card">${customLists.map((name, idx) => `
+        <div class="list-row" data-name="${escapeHtml(name)}" data-idx="${idx}">
+          <button class="ldot-btn" style="--ldot:${escapeHtml(listColor(name))}" data-color-for="${escapeHtml(name)}" aria-label="Change colour"></button>
           <input class="lname-input" value="${escapeHtml(name)}" ${name === 'General' ? 'disabled' : ''} />
           <div class="lactions">
-            <button class="lbtn" data-up="${idx}" ${idx === 0 ? 'style="opacity:.3"' : ''}>↑</button>
-            <button class="lbtn" data-down="${idx}" ${idx === customLists.length - 1 ? 'style="opacity:.3"' : ''}>↓</button>
-            ${name === 'General' ? '' : `<button class="lbtn danger" data-del="${escapeHtml(name)}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
-            </button>`}
+            <button class="lbtn ${idx === 0 ? 'disabled' : ''}" data-up="${idx}" aria-label="Move up">${arrowSvg}</button>
+            <button class="lbtn ${idx === customLists.length - 1 ? 'disabled' : ''}" data-down="${idx}" aria-label="Move down">${arrowDownSvg}</button>
+            ${name === 'General' ? '' : `<button class="lbtn danger" data-del="${escapeHtml(name)}" aria-label="Delete">${trashSvg}</button>`}
           </div>
-          <div class="color-grid" style="grid-column: 1 / -1;">
-            ${COLOR_KEYS.map(k => `<button class="cc ${k===cur?'active':''}" style="--cc-bg:${COLOR_PALETTE[k]}" data-color="${k}"></button>`).join('')}
-          </div>
-        </div>`;
-      }).join('');
+        </div>
+      `).join('')}</div>`;
 
       target.querySelectorAll('.list-row').forEach(row => {
         const name = row.dataset.name;
@@ -2750,10 +3025,9 @@
           if (!newName) return showToast('Name cannot be empty');
           if (newName === name) return;
           if (customLists.includes(newName)) { e.target.value = name; return showToast('A list with that name exists'); }
-          // rename: update tasks & list arrays
           const idx = customLists.indexOf(name);
           customLists[idx] = newName;
-          listColors[newName] = listColors[name] || 'gray';
+          listColors[newName] = normalizeColor(listColors[name]);
           delete listColors[name];
           tasks = tasks.map(t => t.list === name ? { ...t, list: newName } : t);
           if (taskDefaults.list === name) taskDefaults.list = newName;
@@ -2766,13 +3040,7 @@
           renderSettingsBody(document.getElementById('settingsSheetBody'));
           showToast('Renamed');
         });
-        row.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => {
-          listColors[name] = b.dataset.color;
-          saveLists();
-          syncListsReplace();
-          renderListManager(target);
-          renderTaskList(); renderListChips();
-        }));
+        row.querySelector('.ldot-btn').addEventListener('click', () => openColorPicker(name));
       });
       target.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => {
         const i = Number(b.dataset.up);
@@ -2807,16 +3075,72 @@
       }));
     }
 
+    /* Open the color picker — shows quick swatches + custom-via-color-wheel */
+    function openColorPicker(listName) {
+      const current = listColor(listName);
+      document.getElementById('pickerTitle').textContent = `${listName} · Colour`;
+      let chosen = current;
+      const body = document.getElementById('pickerBody');
+      const render = () => {
+        body.innerHTML = `
+          <div class="color-popover">
+            ${COLOR_SWATCHES.map(c => `<button class="cc ${c.toLowerCase() === chosen.toLowerCase() ? 'active' : ''}" style="--cc-bg:${c}" data-c="${c}"></button>`).join('')}
+            <button class="cc custom" data-custom aria-label="Custom colour"></button>
+          </div>
+          <div style="display:flex; align-items:center; gap:14px; padding:12px 4px; margin-top:6px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div style="width:36px; height:36px; border-radius:999px; background:${chosen}; border:2px solid rgba(255,255,255,0.20); box-shadow:0 2px 6px rgba(0,0,0,0.25);"></div>
+              <div>
+                <div style="font-size:11.5px; font-weight:600; color: var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Selected</div>
+                <div style="font-family: ui-monospace, monospace; font-size:14px; font-weight:600; letter-spacing:-0.01em;">${chosen.toUpperCase()}</div>
+              </div>
+            </div>
+          </div>
+          <input type="color" class="hidden-color-input" id="hiddenColorInput" value="${chosen}" />
+        `;
+        body.querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => {
+          chosen = b.dataset.c; render();
+        }));
+        body.querySelector('[data-custom]').addEventListener('click', () => {
+          // Trigger native color picker
+          const inp = document.getElementById('hiddenColorInput');
+          if (inp) inp.click();
+        });
+        body.querySelector('#hiddenColorInput').addEventListener('input', e => {
+          chosen = e.target.value; render();
+        });
+      };
+      setPickerActions('Use Colour');
+      pickerApply = () => {
+        listColors[listName] = chosen;
+        saveLists();
+        syncListsReplace();
+        renderAll();
+        renderSettingsBody(document.getElementById('settingsSheetBody'));
+        showToast('Colour updated');
+      };
+      render();
+      openSheet('pickerOverlay');
+    }
+
     /* ─── Push notifications ─────────────────────────────────────────── */
+    function setPushStatus(text, kind) {
+      const row = document.getElementById('pushStatusRow');
+      const el = document.getElementById('pushStatusText');
+      if (!row || !el) return;
+      if (!text) { row.style.display = 'none'; return; }
+      row.style.display = '';
+      el.textContent = text;
+      el.style.color = kind === 'green' ? 'var(--green)' : kind === 'red' ? 'var(--red)' : 'var(--muted)';
+    }
+
     async function checkPushStatus() {
-      const statusEl = document.getElementById('pushStatusText');
       const btn = document.getElementById('enablePushBtn');
       const installBanner = document.getElementById('installBanner');
-      if (!statusEl || !btn) return;
+      if (!btn) return;
 
       if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-        statusEl.textContent = 'Push not supported in this browser';
-        statusEl.classList.add('red');
+        setPushStatus('Push not supported in this browser', 'red');
         btn.style.display = 'none';
         return;
       }
@@ -2825,8 +3149,7 @@
       const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
       if (isIOS && !isStandalone) {
         installBanner.classList.add('show');
-        statusEl.textContent = 'Tap Share → Add to Home Screen first';
-        statusEl.classList.remove('green');
+        setPushStatus('Tap Share → Add to Home Screen first', 'muted');
         btn.style.display = 'none';
         return;
       } else {
@@ -2838,37 +3161,32 @@
           const reg = await navigator.serviceWorker.ready;
           const sub = await reg.pushManager.getSubscription();
           if (sub) {
-            statusEl.textContent = 'Push notifications active';
-            statusEl.classList.add('green');
-            statusEl.classList.remove('red');
+            setPushStatus('Active on this device', 'green');
             btn.style.display = 'none';
             return;
           }
         } catch {}
       }
       if (Notification.permission === 'denied') {
-        statusEl.textContent = 'Notifications blocked — enable in iOS Settings';
-        statusEl.classList.add('red');
+        setPushStatus('Notifications blocked — enable in iOS Settings', 'red');
         btn.style.display = 'none';
         return;
       }
       btn.style.display = 'inline-flex';
       btn.disabled = false;
       btn.textContent = 'Enable';
-      statusEl.textContent = '';
+      setPushStatus('', '');
     }
 
     async function enablePushNotifications() {
       const btn = document.getElementById('enablePushBtn');
-      const statusEl = document.getElementById('pushStatusText');
-      if (!btn || !statusEl) return;
+      if (!btn) return;
       btn.disabled = true;
       btn.textContent = 'Asking…';
       try {
         const perm = await Notification.requestPermission();
         if (perm !== 'granted') {
-          statusEl.textContent = 'Permission denied';
-          statusEl.classList.add('red');
+          setPushStatus('Permission denied', 'red');
           btn.disabled = false;
           btn.textContent = 'Enable';
           return;
@@ -2884,13 +3202,11 @@
           method: 'POST',
           body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey('p256dh')), auth: arrayBufferToBase64(sub.getKey('auth')) } }),
         });
-        statusEl.textContent = 'Push notifications active';
-        statusEl.classList.add('green');
+        setPushStatus('Active on this device', 'green');
         btn.style.display = 'none';
         showToast('Notifications enabled');
       } catch (e) {
-        statusEl.textContent = 'Error: ' + e.message;
-        statusEl.classList.add('red');
+        setPushStatus('Error: ' + e.message, 'red');
         btn.disabled = false;
         btn.textContent = 'Enable';
       }
