@@ -941,31 +941,60 @@
       border-color: var(--text);
       transform: scale(1.12);
     }
-    .color-popover .cc.custom {
-      background: conic-gradient(from 0deg, #ff453a, #ff9f0a, #ffd60a, #30d158, #0a84ff, #5e5ce6, #bf5af2, #ff2d55, #ff453a);
-      position: relative;
+    /* Custom color swatch: real native colour input styled to look like
+       a rainbow swatch. Tapping it fires the iOS colour wheel directly,
+       since the gesture lands on the input — no programmatic .click(). */
+    .color-popover .cc-custom {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      border: 2px solid transparent;
+      padding: 0;
       cursor: pointer;
+      position: relative;
+      background: conic-gradient(from 0deg, #ff453a, #ff9f0a, #ffd60a, #30d158, #0a84ff, #5e5ce6, #bf5af2, #ff2d55, #ff453a);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+      -webkit-appearance: none;
+      appearance: none;
+      transition: transform .14s var(--ease), border-color .14s;
+      overflow: hidden;
     }
-    .color-popover .cc.custom::after {
-      content: '+';
+    .color-popover .cc-custom::-webkit-color-swatch-wrapper {
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .color-popover .cc-custom::-webkit-color-swatch {
+      border: 0;
+      border-radius: 999px;
+      opacity: 0;
+    }
+    .color-popover .cc-custom::-moz-color-swatch { border: 0; opacity: 0; border-radius: 999px; }
+    .color-popover .cc-custom.active {
+      border-color: var(--text);
+      transform: scale(1.12);
+    }
+    .color-popover .cc-custom-mark {
+      pointer-events: none;
       position: absolute;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #fff;
-      font-size: 22px;
-      font-weight: 300;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
     }
-    .hidden-color-input {
-      position: absolute;
-      left: -9999px;
-      top: -9999px;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
+    .color-popover .cc-custom-mark::after {
+      content: '+';
+      color: #fff;
+      font-size: 24px;
+      font-weight: 300;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+      line-height: 1;
+    }
+    .color-popover .cc-custom-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
     }
 
     /* ─── Activity log ────────────────────────────────────────────────── */
@@ -1149,6 +1178,194 @@
       color: var(--muted);
       margin-bottom: 10px;
     }
+
+    /* ─── Completed task rows ───────────────────────────────────────── */
+    .completed-empty {
+      padding: 60px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .completed-empty .em-icon {
+      font-size: 36px;
+      opacity: 0.45;
+      margin-bottom: 10px;
+    }
+    .completed-empty .em-title {
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.015em;
+      color: var(--text-2);
+      margin-bottom: 4px;
+    }
+    .completed-card {
+      position: relative;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 10px;
+    }
+    [data-theme="light"] .completed-card {
+      background: rgba(255,255,255,0.92);
+      border-color: rgba(17,24,39,0.06);
+    }
+    .completed-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: var(--list-color, transparent);
+    }
+    .completed-card .ct {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-2);
+      text-decoration: line-through;
+      text-decoration-color: var(--muted-2);
+      padding-left: 8px;
+    }
+    .completed-card .cm {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-left: 8px;
+    }
+    .completed-card .cm-meta {
+      font-size: 12.5px;
+      color: var(--muted);
+      letter-spacing: -0.005em;
+    }
+    .completed-card .cm-meta .list-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .completed-card .cm-meta .list-tag::before {
+      content: '';
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--list-color, var(--muted));
+    }
+    .completed-actions { display: flex; gap: 6px; }
+    .completed-actions .btn-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .14s var(--ease), transform .12s var(--ease);
+    }
+    .completed-actions .btn-icon:active { transform: scale(0.92); }
+    .completed-actions .btn-icon.reopen {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .completed-actions .btn-icon.delete {
+      background: var(--red-soft);
+      color: var(--red);
+    }
+    .completed-actions .btn-icon svg { width: 16px; height: 16px; stroke-width: 2.2; }
+
+    /* ─── Inline calendar date picker ────────────────────────────────── */
+    .dp { padding: 4px 4px 6px; }
+    .dp-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .dp-month {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      flex: 1;
+      text-align: center;
+    }
+    .dp-nav {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    [data-theme="light"] .dp-nav { background: rgba(17,24,39,0.06); }
+    .dp-nav:active { background: rgba(255,255,255,0.16); }
+    [data-theme="light"] .dp-nav:active { background: rgba(17,24,39,0.12); }
+    .dp-nav svg { width: 14px; height: 14px; stroke-width: 2.6; }
+    .dp-dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .dp-dow span {
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      padding: 6px 0;
+    }
+    .dp-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .dp-day {
+      aspect-ratio: 1;
+      width: 100%;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color .14s var(--ease), transform .12s var(--ease), color .14s var(--ease);
+      border: 2px solid transparent;
+    }
+    .dp-day:active { transform: scale(0.92); }
+    .dp-day.muted { color: var(--muted-2); opacity: 0.55; }
+    .dp-day.today { color: var(--accent); font-weight: 700; }
+    .dp-day.selected {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+    }
+    .dp-day.today.selected { color: #fff; }
+    .dp-day.today:not(.selected) { border-color: var(--accent); }
+    .dp-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    [data-theme="light"] .dp-foot { border-top-color: rgba(17,24,39,0.07); }
+    .dp-foot-btn {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      transition: background .14s var(--ease), transform .12s var(--ease);
+    }
+    [data-theme="light"] .dp-foot-btn { background: rgba(17,24,39,0.06); }
+    .dp-foot-btn:active { transform: scale(0.96); }
+    .dp-foot-btn.danger { background: var(--red-soft); color: var(--red); }
 
     /* ─── Wheel pickers (date/time) ──────────────────────────────────── */
     .wheel-grid {
@@ -1483,6 +1700,23 @@
     </div>
   </div>
 
+  <!-- ─── Completed Sheet ─────────────────────────────────────────── -->
+  <div class="sheet-overlay" id="completedOverlay" style="z-index: 320;">
+    <div class="sheet">
+      <div class="sheet-grip"><div class="sheet-handle"></div></div>
+      <div class="sheet-head">
+        <h2>Completed</h2>
+        <button class="sheet-close tappable" data-close="completedOverlay">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        </button>
+      </div>
+      <div class="sheet-body" id="completedBody"></div>
+      <div class="sheet-actions single">
+        <button class="btn danger" id="clearAllCompletedBtn">Clear All Completed</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ─── Settings Sheet ──────────────────────────────────────────── -->
   <div class="sheet-overlay" id="settingsOverlay">
     <div class="sheet">
@@ -1749,7 +1983,7 @@
         });
       });
     }
-    ['addSheetOverlay','detailOverlay','pickerOverlay','settingsOverlay'].forEach(wireSheetDrag);
+    ['addSheetOverlay','detailOverlay','pickerOverlay','settingsOverlay','completedOverlay'].forEach(wireSheetDrag);
 
     /* ─── Sync layer (best-effort, optional) ─────────────────────────── */
     async function api(path, opts) {
@@ -2393,56 +2627,98 @@
     }
 
     function openDatePicker(currentValue, onSet) {
-      const today = new Date();
-      let year = today.getFullYear(), month = today.getMonth() + 1, day = today.getDate();
-      if (currentValue) {
-        const parts = currentValue.split('-').map(Number);
-        if (parts.length === 3 && parts.every(Number.isFinite)) [year, month, day] = parts;
+      const todayDate = new Date();
+      const todayIso = todayStr();
+      let viewYear, viewMonth; // currently shown month
+      let selectedIso = currentValue || '';
+      if (selectedIso) {
+        const [yy, mm] = selectedIso.split('-').map(Number);
+        viewYear = yy; viewMonth = mm - 1;
+      } else {
+        viewYear = todayDate.getFullYear();
+        viewMonth = todayDate.getMonth();
       }
-      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      const yearRange = Array.from({ length: 5 }, (_, i) => today.getFullYear() + i - 1);
-      const daysIn = (m, y) => new Date(y, m, 0).getDate();
+      const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
       const body = document.getElementById('pickerBody');
+
       const render = () => {
-        const dim = daysIn(month, year);
-        if (day > dim) day = dim;
-        const days = Array.from({ length: dim }, (_, i) => i + 1);
+        const firstDow = new Date(viewYear, viewMonth, 1).getDay();
+        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+        const prevDays = new Date(viewYear, viewMonth, 0).getDate();
+        let cells = '';
+        for (let i = firstDow - 1; i >= 0; i--) {
+          const d = prevDays - i;
+          const pm = viewMonth === 0 ? 12 : viewMonth;
+          const py = viewMonth === 0 ? viewYear - 1 : viewYear;
+          const iso = `${py}-${String(pm).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          cells += `<button class="dp-day muted" data-iso="${iso}">${d}</button>`;
+        }
+        for (let d = 1; d <= daysInMonth; d++) {
+          const iso = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+          const isToday = iso === todayIso;
+          const isSel = iso === selectedIso;
+          const cls = (isToday ? ' today' : '') + (isSel ? ' selected' : '');
+          cells += `<button class="dp-day${cls}" data-iso="${iso}">${d}</button>`;
+        }
+        const tail = (7 - ((firstDow + daysInMonth) % 7)) % 7;
+        for (let i = 1; i <= tail; i++) {
+          const nm = viewMonth === 11 ? 1 : viewMonth + 2;
+          const ny = viewMonth === 11 ? viewYear + 1 : viewYear;
+          const iso = `${ny}-${String(nm).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+          cells += `<button class="dp-day muted" data-iso="${iso}">${i}</button>`;
+        }
+
         body.innerHTML = `
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:9px; margin-bottom:14px;">
-            <button class="btn ghost small" id="quickToday">Today</button>
-            <button class="btn ghost small" id="quickTomorrow">Tomorrow</button>
-            <button class="btn ghost small" id="quickWeek">+1 Week</button>
-          </div>
-          <div class="wheel-grid">
-            <div class="wheel-col">${months.map((n,i) => `<button class="wheel-opt ${i+1===month?'active':''}" data-month="${i+1}">${n}</button>`).join('')}</div>
-            <div class="wheel-col">${days.map(d => `<button class="wheel-opt ${d===day?'active':''}" data-day="${d}">${String(d).padStart(2,'0')}</button>`).join('')}</div>
-            <div class="wheel-col">${yearRange.map(y => `<button class="wheel-opt ${y===year?'active':''}" data-year="${y}">${y}</button>`).join('')}</div>
-          </div>
-          <button class="picker-clear" id="clearDateBtn">Clear date</button>`;
-        body.querySelectorAll('[data-month]').forEach(b => b.addEventListener('click', () => { month = Number(b.dataset.month); vibrate(8); render(); }));
-        body.querySelectorAll('[data-day]').forEach(b => b.addEventListener('click', () => { day = Number(b.dataset.day); vibrate(8); render(); }));
-        body.querySelectorAll('[data-year]').forEach(b => b.addEventListener('click', () => { year = Number(b.dataset.year); vibrate(8); render(); }));
-        const setFrom = (offset) => {
-          const dt = new Date(); dt.setDate(dt.getDate() + offset);
-          year = dt.getFullYear(); month = dt.getMonth() + 1; day = dt.getDate();
-          render();
-        };
-        body.querySelector('#quickToday').addEventListener('click', () => setFrom(0));
-        body.querySelector('#quickTomorrow').addEventListener('click', () => setFrom(1));
-        body.querySelector('#quickWeek').addEventListener('click', () => setFrom(7));
-        body.querySelector('#clearDateBtn').addEventListener('click', () => { onSet(''); closeSheet('pickerOverlay'); });
-        // Auto-scroll to active
-        body.querySelectorAll('.wheel-col').forEach(col => {
-          const a = col.querySelector('.active');
-          if (a) a.scrollIntoView({ block: 'center' });
+          <div class="dp">
+            <div class="dp-head">
+              <button class="dp-nav tappable" id="dpPrev" aria-label="Previous month">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              </button>
+              <div class="dp-month">${monthNames[viewMonth]} ${viewYear}</div>
+              <button class="dp-nav tappable" id="dpNext" aria-label="Next month">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
+            <div class="dp-dow">
+              <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+            </div>
+            <div class="dp-grid">${cells}</div>
+            <div class="dp-foot">
+              <button class="dp-foot-btn" id="dpToday">Today</button>
+              <button class="dp-foot-btn danger" id="dpClear">Clear</button>
+            </div>
+          </div>`;
+
+        body.querySelector('#dpPrev').addEventListener('click', () => {
+          viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+          vibrate(8); render();
         });
+        body.querySelector('#dpNext').addEventListener('click', () => {
+          viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+          vibrate(8); render();
+        });
+        body.querySelector('#dpToday').addEventListener('click', () => {
+          selectedIso = todayIso;
+          viewYear = todayDate.getFullYear();
+          viewMonth = todayDate.getMonth();
+          vibrate(10); render();
+        });
+        body.querySelector('#dpClear').addEventListener('click', () => {
+          onSet(''); closeSheet('pickerOverlay');
+        });
+        body.querySelectorAll('.dp-day').forEach(b => b.addEventListener('click', () => {
+          const iso = b.dataset.iso;
+          selectedIso = iso;
+          // Keep view on the picked month if different
+          const [yy, mm] = iso.split('-').map(Number);
+          viewYear = yy; viewMonth = mm - 1;
+          vibrate(10); render();
+        }));
       };
+
       document.getElementById('pickerTitle').textContent = 'Due Date';
       setPickerActions('Set Date');
-      pickerApply = () => {
-        const iso = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-        onSet(iso);
-      };
+      pickerApply = () => onSet(selectedIso);
       render();
       openSheet('pickerOverlay');
     }
@@ -2777,6 +3053,86 @@
       }
     });
 
+    /* ─── Completed sheet ──────────────────────────────────────────── */
+    function openCompletedSheet() {
+      renderCompletedBody();
+      openSheet('completedOverlay');
+    }
+
+    function renderCompletedBody() {
+      const body = document.getElementById('completedBody');
+      const clearBtn = document.getElementById('clearAllCompletedBtn');
+      const completed = tasks
+        .filter(isDone)
+        .sort((a, b) => (b.updatedAt || '').localeCompare(a.updatedAt || ''));
+
+      if (clearBtn) clearBtn.disabled = completed.length === 0;
+
+      if (!completed.length) {
+        body.innerHTML = `<div class="completed-empty">
+          <div class="em-icon">✓</div>
+          <div class="em-title">All clear</div>
+          <div>Tasks you mark done will appear here.</div>
+        </div>`;
+        return;
+      }
+
+      const reopenIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>';
+      const trashIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+
+      body.innerHTML = completed.map(t => {
+        const when = t.updatedAt ? formatDateDisplay(t.updatedAt.slice(0, 10)) : '';
+        return `<div class="completed-card" data-id="${escapeHtml(t.id)}" style="--list-color:${listColor(t.list)}">
+          <div class="ct">${escapeHtml(t.title)}</div>
+          <div class="cm">
+            <div class="cm-meta">
+              ${t.list ? `<span class="list-tag" style="--list-color:${listColor(t.list)}">${escapeHtml(t.list)}</span>` : ''}
+              ${when ? ` · Done ${escapeHtml(when)}` : ''}
+            </div>
+            <div class="completed-actions">
+              <button class="btn-icon reopen" data-reopen="${escapeHtml(t.id)}" aria-label="Re-open task" title="Re-open">${reopenIcon}</button>
+              <button class="btn-icon delete" data-del="${escapeHtml(t.id)}" aria-label="Delete forever" title="Delete">${trashIcon}</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      body.querySelectorAll('[data-reopen]').forEach(b => b.addEventListener('click', () => {
+        const id = b.dataset.reopen;
+        updateTask(id, { status: 'Open' });
+        if (completedCount > 0) {
+          completedCount -= 1;
+          localStorage.setItem(KEYS.completedCount, String(completedCount));
+        }
+        renderCompletedBody();
+        showToast('Task re-opened');
+        vibrate(20);
+      }));
+      body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+        const id = b.dataset.del;
+        const t = getTask(id);
+        if (!t) return;
+        const ok = await showConfirm('Delete forever?', `"${t.title}" will be removed permanently.`, 'Delete');
+        if (!ok) return;
+        deleteTask(id);
+        renderCompletedBody();
+      }));
+    }
+
+    document.getElementById('clearAllCompletedBtn').addEventListener('click', async () => {
+      const count = tasks.filter(isDone).length;
+      if (!count) return;
+      const ok = await showConfirm(`Clear ${count} completed task${count === 1 ? '' : 's'}?`, 'They will be permanently deleted.', 'Clear All');
+      if (!ok) return;
+      const completedIds = tasks.filter(isDone).map(t => t.id);
+      tasks = tasks.filter(t => !isDone(t));
+      saveTasks();
+      completedIds.forEach(id => syncDelete(id));
+      renderAll();
+      renderCompletedBody();
+      showToast(`Cleared ${count} task${count === 1 ? '' : 's'}`);
+    });
+
     /* ─── Settings sheet body (iOS-grouped style) ───────────────────── */
     function renderSettingsBody(target) {
       const chev = '<span class="chevron-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></span>';
@@ -2910,10 +3266,21 @@
         </div>
 
         <div class="settings-group">
+          <div class="settings-group-title">Completed</div>
           <div class="settings-card">
+            <div class="settings-row tap" id="setCompletedRow">
+              <div>
+                <div class="sr-label">View Completed Tasks</div>
+                <div class="sr-sub">Re-open or permanently delete past tasks.</div>
+              </div>
+              <div class="chevron-wrap">
+                <span class="sr-value">${tasks.filter(isDone).length}</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+              </div>
+            </div>
             <div class="settings-stat">
               <div class="stat-num">${completedCount}</div>
-              <div class="stat-label">tasks completed in The Playbook</div>
+              <div class="stat-label">tasks completed all-time in The Playbook</div>
             </div>
           </div>
         </div>
@@ -2999,6 +3366,10 @@
       target.querySelector('#setExportRow').addEventListener('click', exportData);
       target.querySelector('#setImportRow').addEventListener('click', () => document.getElementById('importFile').click());
 
+      // Completed
+      const completedRow = target.querySelector('#setCompletedRow');
+      if (completedRow) completedRow.addEventListener('click', openCompletedSheet);
+
       checkPushStatus();
     }
 
@@ -3075,40 +3446,41 @@
       }));
     }
 
-    /* Open the color picker — shows quick swatches + custom-via-color-wheel */
+    /* Open the color picker — shows quick swatches + native colour wheel */
     function openColorPicker(listName) {
       const current = listColor(listName);
       document.getElementById('pickerTitle').textContent = `${listName} · Colour`;
       let chosen = current;
       const body = document.getElementById('pickerBody');
+      const isStandard = (c) => COLOR_SWATCHES.some(s => s.toLowerCase() === c.toLowerCase());
+
       const render = () => {
+        const customActive = !isStandard(chosen);
         body.innerHTML = `
           <div class="color-popover">
             ${COLOR_SWATCHES.map(c => `<button class="cc ${c.toLowerCase() === chosen.toLowerCase() ? 'active' : ''}" style="--cc-bg:${c}" data-c="${c}"></button>`).join('')}
-            <button class="cc custom" data-custom aria-label="Custom colour"></button>
+            <span class="cc-custom-wrap">
+              <input type="color" class="cc-custom ${customActive ? 'active' : ''}" id="customColorInput" value="${chosen}" aria-label="Custom colour" />
+              <span class="cc-custom-mark"></span>
+            </span>
           </div>
-          <div style="display:flex; align-items:center; gap:14px; padding:12px 4px; margin-top:6px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <div style="width:36px; height:36px; border-radius:999px; background:${chosen}; border:2px solid rgba(255,255,255,0.20); box-shadow:0 2px 6px rgba(0,0,0,0.25);"></div>
+          <div style="display:flex; align-items:center; gap:14px; padding:14px 4px 0;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:40px; height:40px; border-radius:999px; background:${chosen}; border:2px solid rgba(255,255,255,0.22); box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>
               <div>
-                <div style="font-size:11.5px; font-weight:600; color: var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Selected</div>
-                <div style="font-family: ui-monospace, monospace; font-size:14px; font-weight:600; letter-spacing:-0.01em;">${chosen.toUpperCase()}</div>
+                <div style="font-size:11.5px; font-weight:700; color: var(--muted); text-transform:uppercase; letter-spacing:0.06em;">Selected</div>
+                <div style="font-family: ui-monospace, monospace; font-size:15px; font-weight:600; letter-spacing:-0.01em;">${chosen.toUpperCase()}</div>
               </div>
             </div>
           </div>
-          <input type="color" class="hidden-color-input" id="hiddenColorInput" value="${chosen}" />
         `;
         body.querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => {
           chosen = b.dataset.c; render();
         }));
-        body.querySelector('[data-custom]').addEventListener('click', () => {
-          // Trigger native color picker
-          const inp = document.getElementById('hiddenColorInput');
-          if (inp) inp.click();
-        });
-        body.querySelector('#hiddenColorInput').addEventListener('input', e => {
-          chosen = e.target.value; render();
-        });
+        const ci = body.querySelector('#customColorInput');
+        // Live update as user moves around the colour wheel
+        ci.addEventListener('input',  e => { chosen = e.target.value; render(); });
+        ci.addEventListener('change', e => { chosen = e.target.value; render(); });
       };
       setPickerActions('Use Colour');
       pickerApply = () => {
