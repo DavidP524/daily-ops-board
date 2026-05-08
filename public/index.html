@@ -1479,6 +1479,361 @@
     .row { display: flex; gap: 10px; align-items: center; }
     .grow { flex: 1; }
 
+    /* Premium iOS refresh */
+    :root {
+      --bg-grad: radial-gradient(circle at 50% -12%, rgba(10,132,255,0.16), transparent 34%),
+                 linear-gradient(180deg, #070b13 0%, #090d15 42%, #060911 100%);
+      --surface: rgba(24,29,39,0.76);
+      --surface-2: rgba(30,36,48,0.88);
+      --surface-3: rgba(42,49,63,0.94);
+      --border: rgba(255,255,255,0.075);
+      --border-2: rgba(255,255,255,0.12);
+      --text: #f7f9ff;
+      --text-2: #d6dbe6;
+      --muted: #8d96a8;
+      --muted-2: #626b7c;
+      --r-lg: 20px;
+      --r-md: 14px;
+      --r-sm: 10px;
+      --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 30px rgba(0,0,0,0.18);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif; }
+    .shell { padding: 12px 16px 18px; }
+    .hero { padding: 8px 2px 10px; }
+    .hero-kicker { font-size: 13px; letter-spacing: 0; }
+    .hero-title { font-size: 28px; letter-spacing: -0.025em; }
+    .hero-sub { font-size: 13px; margin-top: 6px; }
+    .focus-panel {
+      margin: 10px 0 10px;
+      border-radius: var(--r-lg);
+      border: 1px solid rgba(10,132,255,0.16);
+      background: linear-gradient(180deg, rgba(19,26,40,0.96), rgba(14,19,29,0.92));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.055) inset, 0 18px 48px rgba(0,0,0,0.26);
+      overflow: hidden;
+    }
+    .focus-panel.empty { display: none; }
+    .focus-card {
+      padding: 14px;
+      display: grid;
+      gap: 11px;
+    }
+    .focus-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--accent);
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .focus-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 0 22px rgba(10,132,255,0.5);
+    }
+    .focus-title {
+      margin: 0;
+      color: var(--text);
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+    .focus-meta { color: var(--muted); font-size: 13px; }
+    .focus-next {
+      border-radius: 13px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.055);
+      padding: 10px 11px;
+      color: var(--text-2);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .focus-next span {
+      display: block;
+      color: var(--muted);
+      font-size: 10.5px;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 3px;
+    }
+    .focus-actions {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr 1.2fr;
+      gap: 8px;
+    }
+    .focus-actions .btn {
+      min-width: 0;
+      height: 38px;
+      border-radius: 13px;
+      font-size: 12.5px;
+      padding: 0 9px;
+      white-space: nowrap;
+    }
+    .quick-capture {
+      height: 48px;
+      margin: 10px 0 12px;
+      display: grid;
+      grid-template-columns: 36px 1fr 36px;
+      align-items: center;
+      gap: 6px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.065);
+      border: 1px solid rgba(255,255,255,0.075);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+      padding: 0 6px;
+    }
+    .quick-capture:focus-within {
+      border-color: rgba(10,132,255,0.55);
+      box-shadow: 0 0 0 4px var(--accent-soft), 0 1px 0 rgba(255,255,255,0.04) inset;
+    }
+    .quick-capture input {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      border: 0;
+      outline: 0;
+      color: var(--text);
+      font-size: 15px;
+    }
+    .quick-capture input::placeholder { color: var(--muted); }
+    .quick-plus, .quick-mic {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      background: rgba(10,132,255,0.12);
+    }
+    .quick-mic { color: var(--muted); background: transparent; }
+    .quick-plus svg, .quick-mic svg { width: 17px; height: 17px; stroke-width: 2.4; }
+    .view-pills { grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 10px 0 12px; }
+    .vp {
+      min-height: 54px;
+      padding: 10px 9px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.045);
+    }
+    .vp-num { font-size: 21px; letter-spacing: -0.02em; }
+    .vp-label { font-size: 11px; margin-top: 3px; }
+    .toolbar { margin-bottom: 10px; }
+    .filter-chip-row { margin-bottom: 6px; }
+    .section-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 2px 2px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .section-label span:last-child {
+      color: var(--muted-2);
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: 700;
+    }
+    .task-list { gap: 8px; }
+    .task-card {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      column-gap: 10px;
+      padding: 12px 12px;
+      padding-right: 46px;
+      border-radius: 15px;
+      background: rgba(22,27,37,0.88);
+      border-color: rgba(255,255,255,0.065);
+      box-shadow: var(--shadow-card);
+    }
+    .task-card::before {
+      top: 12px;
+      bottom: 12px;
+      width: 2px;
+      opacity: 0.85;
+    }
+    .task-check {
+      grid-row: 1 / span 4;
+      width: 22px;
+      height: 22px;
+      margin-top: 1px;
+      border-radius: 999px;
+      border: 1.5px solid var(--border-2);
+      background: rgba(255,255,255,0.025);
+    }
+    .task-card.attention .task-check { border-color: rgba(255,69,58,0.6); }
+    .task-card .complete-btn {
+      left: 12px;
+      right: auto;
+      top: 13px;
+      transform: none;
+      width: 22px;
+      height: 22px;
+      background: transparent;
+      border: 1.5px solid var(--border-2);
+      color: transparent;
+    }
+    .task-card .complete-btn:active {
+      transform: scale(0.9);
+      background: var(--green);
+      border-color: var(--green);
+      color: #fff;
+    }
+    .task-card .complete-btn svg { width: 12px; height: 12px; }
+    .task-title { font-size: 15px; line-height: 1.25; }
+    .task-title, .task-due, .task-next, .task-meta { grid-column: 2; }
+    .task-due { font-size: 12px; margin-top: 3px; }
+    .task-next { font-size: 12.5px; margin-top: 4px; color: var(--muted); }
+    .task-meta { margin-top: 7px; gap: 4px; }
+    .pill {
+      font-size: 10.5px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.055);
+    }
+    .fab {
+      width: 52px;
+      height: 52px;
+      bottom: calc(84px + env(safe-area-inset-bottom));
+      right: 16px;
+    }
+    .bottom-nav {
+      width: min(420px, calc(100% - 20px));
+      left: 50%;
+      right: auto;
+      bottom: calc(8px + env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      height: 64px;
+      padding: 7px;
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(13,17,25,0.78);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.32);
+    }
+    .bnav-btn { border-radius: 16px; }
+    .bnav-btn.active { background: rgba(10,132,255,0.12); }
+    .sheet { background: rgba(18,22,31,0.93); border-radius: 24px 24px 0 0; }
+    .sheet-head h2 { font-size: 20px; }
+    .sheet-body { padding: 0 16px; }
+    .sheet-actions { padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); }
+    .input, select.input, textarea.input,
+    .picker-row {
+      background: rgba(255,255,255,0.055);
+      border-color: rgba(255,255,255,0.07);
+    }
+    .quick-date-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .quick-date {
+      height: 36px;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.055);
+      border: 1px solid rgba(255,255,255,0.07);
+      color: var(--text-2);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    .quick-date.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .chip-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      border-radius: 14px;
+      padding: 3px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.055);
+    }
+    .chip {
+      height: 34px;
+      padding: 0 10px;
+      border-radius: 11px;
+      border: 0;
+      background: transparent;
+      text-align: center;
+    }
+    .smart-suggestions {
+      display: grid;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .smart-suggestion {
+      min-height: 34px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.055);
+      color: var(--text-2);
+      font-size: 12.5px;
+      text-align: left;
+    }
+    .detail-hero {
+      display: grid;
+      gap: 9px;
+      margin-bottom: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .detail-group {
+      margin-bottom: 16px;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: rgba(255,255,255,0.035);
+    }
+    .detail-group .field, .detail-group .two-col, .detail-group .three-col { margin: 0; }
+    .detail-group .picker-row { border-radius: 0; border-width: 0 0 1px 0; background: transparent; }
+    .detail-group .picker-row:last-child { border-bottom: 0; }
+    .detail-group .two-col, .detail-group .three-col { display: block; }
+    .cal-head { padding: 8px 2px 14px; }
+    .cal-head .month { font-size: 24px; }
+    .cal-grid { gap: 6px; }
+    .cal-day {
+      border-radius: 999px;
+      font-size: 14px;
+      min-height: 40px;
+    }
+    .cal-day.selected { box-shadow: 0 8px 22px rgba(10,132,255,0.28); }
+    .cal-tasks {
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,0.065);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.035);
+    }
+    .settings-group { margin-bottom: 20px; }
+    .settings-group-title { padding: 0 12px 7px; font-size: 11px; letter-spacing: 0.08em; }
+    .settings-card { border-radius: 16px; background: rgba(255,255,255,0.045); }
+    .settings-row { min-height: 50px; padding: 12px 14px; }
+    .settings-row .sr-label { font-size: 15px; }
+    .settings-row .sr-sub { font-size: 12.5px; }
+    .list-add-row { padding: 0 !important; }
+    @media (max-width: 380px) {
+      .shell { padding-left: 12px; padding-right: 12px; }
+      .focus-actions { grid-template-columns: 1fr 1fr; }
+      .view-pills { gap: 5px; }
+      .vp { padding-left: 7px; padding-right: 7px; }
+      .vp-num { font-size: 19px; }
+      .vp-label { font-size: 10px; }
+      .bottom-nav { width: min(390px, calc(100% - 14px)); }
+    }
+
     /* viewport sizing safety */
     .sheet-body, .activity-log, .wheel-col { overscroll-behavior: contain; }
   </style>
@@ -1501,18 +1856,34 @@
         </div>
       </div>
 
+      <div id="focusPanel" class="focus-panel"></div>
+
+      <form id="quickCapture" class="quick-capture" autocomplete="off">
+        <button class="quick-plus" type="submit" aria-label="Add quick task">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+        </button>
+        <input id="quickTitle" type="text" placeholder="Add a task..." aria-label="Add a task" />
+        <button class="quick-mic" type="button" id="quickOpenFull" aria-label="Open full task form">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/></svg>
+        </button>
+      </form>
+
       <div class="view-pills">
         <button class="vp active" data-view="My Day">
           <div class="vp-num" id="myDayCount">0</div>
+          <div class="vp-label">Now</div>
+        </button>
+        <button class="vp" data-view="Today">
+          <div class="vp-num" id="pastDueCount">0</div>
           <div class="vp-label">Today</div>
         </button>
-        <button class="vp" data-view="Past Due">
-          <div class="vp-num" id="pastDueCount">0</div>
-          <div class="vp-label">Past Due</div>
+        <button class="vp" data-view="Later">
+          <div class="vp-num" id="laterCount">0</div>
+          <div class="vp-label">Later</div>
         </button>
-        <button class="vp" data-view="Open Tasks">
-          <div class="vp-num" id="openCount">0</div>
-          <div class="vp-label">Open</div>
+        <button class="vp" data-view="Completed">
+          <div class="vp-num" id="completedViewCount">0</div>
+          <div class="vp-label">Done</div>
         </button>
       </div>
 
@@ -1614,6 +1985,15 @@
       <div class="sheet-body">
         <div class="field">
           <input id="newTitle" class="input title-large" placeholder="What needs to get done?" autocomplete="off" />
+          <div class="field-hint">e.g. Call Sam tomorrow at 10am</div>
+          <div class="smart-suggestions" id="smartSuggestions"></div>
+        </div>
+        <div class="field">
+          <div class="quick-date-row">
+            <button class="quick-date active" type="button" data-quick-date="today">Today</button>
+            <button class="quick-date" type="button" data-quick-date="tonight">Tonight</button>
+            <button class="quick-date" type="button" data-quick-date="tomorrow">Tomorrow</button>
+          </div>
         </div>
         <div class="field">
           <button class="picker-row tappable" id="newListPicker">
@@ -2065,6 +2445,8 @@
 
     function filterByView(t, view) {
       if (view === 'My Day')      return isMyDay(t);
+      if (view === 'Today')       return isToday(t) || isOverdue(t);
+      if (view === 'Later')       return !isDone(t) && !isToday(t) && !isOverdue(t);
       if (view === 'Past Due')    return isOverdue(t);
       if (view === 'Open Tasks')  return !isDone(t);
       if (view === 'Completed')   return isDone(t);
@@ -2740,7 +3122,7 @@
       addState = {
         title: '',
         list: taskDefaults.list || customLists[0] || 'General',
-        dueDate: '',
+        dueDate: todayStr(),
         reminderTime: '',
         reminderLeadMinutes: String(reminderSettings.reminder_lead_minutes ?? '0'),
         priority: taskDefaults.priority || 'Normal',
@@ -2750,6 +3132,8 @@
       };
       document.getElementById('newTitle').value = '';
       document.getElementById('newNext').value = '';
+      document.querySelectorAll('[data-quick-date]').forEach(b => b.classList.toggle('active', b.dataset.quickDate === 'today'));
+      renderSmartSuggestions();
       syncAddSheetLabels();
     }
 
@@ -2819,25 +3203,16 @@
     function renderDetailBody(t) {
       const body = document.getElementById('detailBody');
       body.innerHTML = `
-        <div class="field">
+        <div class="detail-hero">
           <input id="dTitle" class="input title-large" value="${escapeHtml(t.title)}" placeholder="Title" />
-        </div>
-        <div class="field">
           <input id="dNext" class="input" value="${escapeHtml(t.nextAction || '')}" placeholder="Next action" />
         </div>
-        <div class="field">
-          <button class="picker-row tappable" id="dListPicker">
-            <span class="pr-label">List</span>
-            <span class="pr-value" id="dListLabel"><span style="display:inline-block; width:8px; height:8px; border-radius:999px; background:${listColor(t.list)}; margin-right:6px; vertical-align:middle;"></span>${escapeHtml(t.list)}</span>
-          </button>
-        </div>
-        <div class="field">
+
+        <div class="detail-group">
           <button class="picker-row tappable" id="dDuePicker">
             <span class="pr-label">Due Date</span>
             <span class="pr-value ${t.dueDate ? '' : 'muted'}" id="dDueLabel">${t.dueDate ? escapeHtml(formatDateDisplay(t.dueDate)) : 'None'}</span>
           </button>
-        </div>
-        <div class="two-col">
           <button class="picker-row tappable" id="dTimePicker">
             <span class="pr-label">Time</span>
             <span class="pr-value ${t.reminderTime ? '' : 'muted'}" id="dTimeLabel">${t.reminderTime ? escapeHtml(formatTimeLabel(t.reminderTime)) : 'None'}</span>
@@ -2846,8 +3221,10 @@
             <span class="pr-label">Remind</span>
             <span class="pr-value" id="dReminderLabel">${escapeHtml(reminderValueLabel(t.reminderLeadMinutes ?? reminderSettings.reminder_lead_minutes ?? '0'))}</span>
           </button>
-        </div>
-        <div class="three-col" style="margin-top:14px">
+          <button class="picker-row tappable" id="dListPicker">
+            <span class="pr-label">List</span>
+            <span class="pr-value" id="dListLabel"><span style="display:inline-block; width:8px; height:8px; border-radius:999px; background:${listColor(t.list)}; margin-right:6px; vertical-align:middle;"></span>${escapeHtml(t.list)}</span>
+          </button>
           <button class="picker-row tappable" id="dPriorityPicker">
             <span class="pr-label">Priority</span>
             <span class="pr-value" id="dPriorityLabel">${escapeHtml(t.priority)}</span>
@@ -3179,7 +3556,7 @@
         </div>
 
         <div class="settings-group">
-          <div class="settings-group-title">Notifications</div>
+          <div class="settings-group-title">Reminders</div>
           <div class="settings-card">
             <div class="settings-row">
               <div>
@@ -3637,6 +4014,180 @@
     });
 
     /* ─── Render all ─────────────────────────────────────────────────── */
+    /* Premium Today dashboard helpers */
+    function getFocusTask() {
+      const open = tasks.filter(t => !isDone(t));
+      if (!open.length) return null;
+      return [...open].sort((a, b) => smartScore(a) - smartScore(b))[0];
+    }
+
+    function renderFocusPanel() {
+      const panel = document.getElementById('focusPanel');
+      if (!panel) return;
+      const t = getFocusTask();
+      if (!t || currentView === 'Completed') {
+        panel.className = 'focus-panel empty';
+        panel.innerHTML = '';
+        return;
+      }
+      const when = dueLine(t).replace('task-due', 'focus-meta').replace(/<strong[^>]*>|<\/strong>/g, '');
+      panel.className = 'focus-panel';
+      panel.innerHTML = `
+        <div class="focus-card" data-focus-id="${escapeHtml(t.id)}">
+          <div class="focus-label"><span class="focus-dot">✓</span> Focus Now</div>
+          <h2 class="focus-title">${escapeHtml(t.title)}</h2>
+          ${when || '<div class="focus-meta">No due time set</div>'}
+          <div class="focus-next"><span>Next action</span>${escapeHtml(t.nextAction || 'Choose the smallest next move.')}</div>
+          <div class="focus-actions">
+            <button class="btn green" data-focus-done="${escapeHtml(t.id)}">Done</button>
+            <button class="btn ghost" data-focus-remind="${escapeHtml(t.id)}">Remind</button>
+            <button class="btn ghost" data-focus-snooze="${escapeHtml(t.id)}">Snooze</button>
+            <button class="btn primary" data-focus-start="${escapeHtml(t.id)}">Start Focus</button>
+          </div>
+        </div>
+      `;
+      panel.querySelector('[data-focus-done]').addEventListener('click', e => {
+        e.stopPropagation();
+        completeTask(e.currentTarget.dataset.focusDone);
+      });
+      panel.querySelector('[data-focus-remind]').addEventListener('click', e => {
+        e.stopPropagation();
+        openTaskDetail(e.currentTarget.dataset.focusRemind);
+      });
+      panel.querySelector('[data-focus-snooze]').addEventListener('click', e => {
+        e.stopPropagation();
+        updateTask(e.currentTarget.dataset.focusSnooze, { dueDate: addDaysIso(1), pinnedToday: false });
+        showToast('Snoozed until tomorrow');
+      });
+      panel.querySelector('[data-focus-start]').addEventListener('click', e => {
+        e.stopPropagation();
+        selectedTaskId = e.currentTarget.dataset.focusStart;
+        showToast('Focus started');
+        openTaskDetail(selectedTaskId);
+      });
+      panel.querySelector('.focus-card').addEventListener('click', () => openTaskDetail(t.id));
+    }
+
+    function renderHero() {
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+      const dayCount = countForView('My Day');
+      const overdue = countForView('Past Due');
+      const needsVerb = n => n === 1 ? 'needs' : 'need';
+      let sub = `${countForView(currentView)} in ${currentView}.`;
+      if (currentView === 'My Day') {
+        sub = dayCount === 0 ? 'Nothing on your plate today.' :
+          overdue > 0 ? `${dayCount} task${dayCount===1?'':'s'} today, ${overdue} past due.` :
+          `${dayCount} task${dayCount===1?'':'s'} ${needsVerb(dayCount)} attention.`;
+      } else if (currentView === 'Today') {
+        sub = `${countForView('Today')} task${countForView('Today')===1?'':'s'} due today or overdue.`;
+      } else if (currentView === 'Later') {
+        sub = `${countForView('Later')} task${countForView('Later')===1?'':'s'} waiting for later.`;
+      } else if (currentView === 'Completed') {
+        sub = `${countForView('Completed')} task${countForView('Completed')===1?'':'s'} completed.`;
+      } else if (currentView === 'Past Due') {
+        sub = `${overdue} task${overdue===1?'':'s'} ${needsVerb(overdue)} attention.`;
+      } else if (currentView === 'Open Tasks') {
+        sub = `${countForView('Open Tasks')} open task${countForView('Open Tasks')===1?'':'s'}.`;
+      }
+      document.getElementById('heroKicker').textContent = `${greeting}${userName ? `, ${userName}` : ''}`;
+      document.getElementById('heroTitle').textContent = currentView === 'My Day' ? 'Today' : currentView;
+      document.getElementById('heroSub').textContent = sub;
+      renderFocusPanel();
+    }
+
+    function renderViewPills() {
+      document.getElementById('myDayCount').textContent = countForView('My Day');
+      document.getElementById('pastDueCount').textContent = countForView('Today');
+      document.getElementById('laterCount').textContent = countForView('Later');
+      document.getElementById('completedViewCount').textContent = countForView('Completed');
+      document.querySelectorAll('.view-pills .vp').forEach(vp => {
+        vp.classList.toggle('active', vp.dataset.view === currentView && !filterList);
+      });
+    }
+
+    function addDaysIso(days) {
+      const d = new Date();
+      d.setHours(0,0,0,0);
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0,10);
+    }
+
+    function applyQuickDate(kind) {
+      document.querySelectorAll('[data-quick-date]').forEach(b => b.classList.toggle('active', b.dataset.quickDate === kind));
+      if (kind === 'today') {
+        addState.dueDate = todayStr();
+        addState.reminderTime = '';
+      } else if (kind === 'tonight') {
+        addState.dueDate = todayStr();
+        addState.reminderTime = '18:00';
+      } else if (kind === 'tomorrow') {
+        addState.dueDate = addDaysIso(1);
+        addState.reminderTime = '';
+      }
+      syncAddSheetLabels();
+    }
+
+    function quickPayloadFromText(raw) {
+      let title = cleanText(raw);
+      const lower = title.toLowerCase();
+      const payload = {
+        title,
+        list: taskDefaults.list || 'General',
+        priority: taskDefaults.priority || 'Normal',
+        dueDate: todayStr(),
+        reminderTime: '',
+        reminderLeadMinutes: '',
+        repeat: 'none',
+        repeatEvery: '',
+        nextAction: '',
+      };
+      if (/\btomorrow\b/.test(lower)) payload.dueDate = addDaysIso(1);
+      if (/\btonight\b/.test(lower)) { payload.dueDate = todayStr(); payload.reminderTime = '18:00'; }
+      const timeMatch = lower.match(/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/);
+      if (timeMatch) {
+        let hour = Number(timeMatch[1]);
+        const minute = Number(timeMatch[2] || 0);
+        if (timeMatch[3] === 'pm' && hour < 12) hour += 12;
+        if (timeMatch[3] === 'am' && hour === 12) hour = 0;
+        payload.reminderTime = `${String(hour).padStart(2,'0')}:${String(minute).padStart(2,'0')}`;
+        payload.reminderLeadMinutes = String(reminderSettings.reminder_lead_minutes ?? '0');
+      }
+      return payload;
+    }
+
+    function renderSmartSuggestions() {
+      const el = document.getElementById('smartSuggestions');
+      const input = document.getElementById('newTitle');
+      if (!el || !input) return;
+      const text = cleanText(input.value);
+      const suggestions = [
+        { label: 'Set for today', date: 'today' },
+        { label: 'Tonight at 6:00 PM', date: 'tonight' },
+        { label: 'Tomorrow', date: 'tomorrow' },
+      ];
+      el.innerHTML = suggestions.map(s => `<button type="button" class="smart-suggestion" data-suggestion="${s.date}">${escapeHtml(text ? `${s.label}: ${text}` : s.label)}</button>`).join('');
+      el.querySelectorAll('[data-suggestion]').forEach(b => b.addEventListener('click', () => applyQuickDate(b.dataset.suggestion)));
+    }
+
+    document.getElementById('quickCapture').addEventListener('submit', e => {
+      e.preventDefault();
+      const input = document.getElementById('quickTitle');
+      const payload = quickPayloadFromText(input.value);
+      if (!payload.title) return showToast('Add a task title first');
+      addTask(payload);
+      input.value = '';
+    });
+    document.getElementById('quickOpenFull').addEventListener('click', () => {
+      resetAddState();
+      document.getElementById('newTitle').value = document.getElementById('quickTitle').value;
+      renderSmartSuggestions();
+      openSheet('addSheetOverlay');
+      setTimeout(() => document.getElementById('newTitle').focus(), 240);
+    });
+    document.querySelectorAll('[data-quick-date]').forEach(b => b.addEventListener('click', () => applyQuickDate(b.dataset.quickDate)));
+    document.getElementById('newTitle').addEventListener('input', renderSmartSuggestions);
+
     function renderAll() {
       tasks = tasks.map(migrateTask); // safety pass
       saveTasks();
@@ -3674,6 +4225,10 @@
     if (!Array.isArray(tasks)) tasks = [];
     tasks = tasks.map(migrateTask);
     if (!customLists.includes('General')) customLists.unshift('General');
+    if (currentView === 'Past Due' || currentView === 'Open Tasks') {
+      currentView = 'My Day';
+      localStorage.setItem(KEYS.view, currentView);
+    }
     saveTasks(); saveLists();
     renderAll();
     syncOnLoad();
