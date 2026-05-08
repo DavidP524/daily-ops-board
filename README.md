@@ -1,116 +1,66 @@
-# Daily Ops Board
+# The Playbook
 
-iOS-optimized PWA task manager with push notifications, morning digest, and cloud sync.
+iPhone-first PWA task manager. Built for daily execution with persistent push notification nudges that keep firing every 5 minutes until you act on them.
 
----
+## Features
 
-## Deploy to Vercel (Step-by-Step)
+- **My Day view** — today's tasks, overdue tasks, and pinned tasks in one place
+- **Smart Sort** — surfaces what matters most (overdue → today → high priority)
+- **Persistent nudges** — server-side push that re-fires every 5 minutes until you tap Done or Snooze
+- **Quiet Hours** — no nudges during your sleep window
+- **Lists with colors** — color-code your task lists (urgent = red, follow up = blue, etc.)
+- **Activity log** — timestamped updates per task, separated into User and System entries
+- **Checklist** — sub-steps within a task
+- **Repeat** — daily, weekly, monthly, weekdays, every Monday, custom every-X-days
+- **Pin to My Day** — force a task into today's view regardless of due date
+- **Calendar view** — monthly grid showing tasks per day
+- **Backup / Restore** — JSON export and import
+- **Light & Dark themes** — Apple-style aesthetic, blur and translucency throughout
+- **Offline-ready** — service worker caches the app shell
 
-### Step 1 — Push your code to GitHub
-
-1. Go to [github.com](https://github.com) and sign in (or create a free account).
-2. Click **New repository**, name it `daily-ops-board`, and click **Create repository**.
-3. On your computer, open a terminal in this folder and run:
-   ```
-   git add .
-   git commit -m "Initial build"
-   git remote add origin https://github.com/YOUR_USERNAME/daily-ops-board.git
-   git push -u origin main
-   ```
-
-### Step 2 — Connect to Vercel
-
-1. Go to [vercel.com](https://vercel.com) and sign in with your GitHub account.
-2. Click **Add New → Project**.
-3. Find `daily-ops-board` in the list and click **Import**.
-4. Leave all settings at their defaults (Vercel auto-detects the `vercel.json`).
-5. Click **Deploy** and wait ~60 seconds.
-
-### Step 3 — Set Environment Variables in Vercel
-
-After the first deploy, you need to add your VAPID keys (for push notifications):
-
-1. In the Vercel dashboard, go to your project → **Settings → Environment Variables**.
-2. Add these variables one at a time:
-
-| Name | Value |
-|------|-------|
-| `VAPID_PUBLIC_KEY` | *(see below)* |
-| `VAPID_PRIVATE_KEY` | *(see below)* |
-| `VAPID_EMAIL` | `mailto:your@email.com` |
-| `DB_PATH` | `/tmp/ops.db` |
-| `NODE_ENV` | `production` |
-
-**To get your VAPID keys:** Run the server locally once (`npm run dev`) and look at the terminal output — it will print `VAPID_PUBLIC_KEY=...`. Copy both keys from there into Vercel.
-
-3. After adding all variables, go to **Deployments** and click **Redeploy** on the latest deployment.
-
-### Step 4 — Add to iPhone Home Screen
-
-Push notifications on iOS **only work when the app is added to your Home Screen**. Regular Safari tab = no push.
-
-1. Open your Vercel app URL in Safari on your iPhone.
-2. Tap the **Share** button (box with arrow pointing up).
-3. Scroll down and tap **Add to Home Screen**.
-4. Tap **Add** in the top right.
-5. The app now opens full-screen like a native app.
-
-### Step 5 — Enable Push Notifications
-
-1. Open the app from your Home Screen icon.
-2. Tap **Settings** (gear icon) in the bottom nav.
-3. Tap **Enable Push Notifications**.
-4. When iOS asks for permission, tap **Allow**.
-5. You should see "Push Notifications Active" in the Settings panel.
-6. Toggle on **Morning Digest** and/or **Task Reminders** and set your times.
-
----
-
-## Important Notes
-
-### Data Persistence on Vercel
-Vercel uses serverless functions. The SQLite database is stored at `/tmp/ops.db` which **resets between cold starts** (usually every few hours of inactivity). Your data is also saved to `localStorage` in your browser, so the app will always have local data — but server-synced data may reset.
-
-**For permanent data persistence**, deploy to [Render.com](https://render.com) instead (free tier) using the persistent disk config below.
-
-### Using Render.com Instead (Recommended for Permanent Storage)
-
-1. Sign up at [render.com](https://render.com).
-2. Click **New → Web Service** and connect your GitHub repo.
-3. Set:
-   - **Build Command:** `npm install`
-   - **Start Command:** `node server.js`
-4. Add the same environment variables as Vercel.
-5. Under **Advanced**, add a **Disk** mount:
-   - Mount Path: `/data`
-   - Size: 1 GB
-6. Set `DB_PATH` to `/data/ops.db` instead of `/tmp/ops.db`.
-
----
-
-## Running Locally
+## Getting Started
 
 ```bash
 npm install
-cp .env.example .env
-# Edit .env and fill in your values, or leave VAPID keys blank (auto-generated on first run)
 npm run dev
 ```
 
-Open `http://localhost:3000` in your browser.
+Then open `http://localhost:3000`.
 
----
+The first run auto-generates VAPID keys and prints them to the console. Copy them into a `.env` file so push notifications keep working between restarts.
 
-## Project Structure
+## Deploying to Vercel
 
-```
-├── server.js          # Express backend
-├── public/
-│   ├── index.html     # PWA frontend
-│   ├── sw.js          # Service worker
-│   ├── manifest.json  # PWA manifest
-│   └── icons/         # App icons
-├── package.json
-├── vercel.json        # Vercel deployment config
-└── .env.example       # Environment variable template
-```
+1. Push this repo to GitHub.
+2. Import the repo in Vercel.
+3. Add these env vars in **Project → Settings → Environment Variables**:
+   - `VAPID_PUBLIC_KEY` — from the local console output
+   - `VAPID_PRIVATE_KEY` — from the local console output
+   - `VAPID_EMAIL` — `mailto:you@example.com`
+   - `DB_PATH` — `/tmp/ops.db`
+4. Redeploy.
+
+## Installing on iPhone
+
+Push notifications **only work when the PWA is installed to your Home Screen** (iOS 16.4+).
+
+1. Open the Vercel URL in Safari on iPhone.
+2. Tap the **Share** button → **Add to Home Screen** → **Add**.
+3. Open the app from the Home Screen icon (not from Safari).
+4. Open **Settings → Push Notifications → Enable**.
+
+## How the Nudge System Works
+
+When a task has a due date and a time set, the server triggers reminders based on your settings:
+
+- At fire time, you receive the first push notification with **Done** and **Snooze 5m** action buttons.
+- If you don't act on it, the server re-fires every 5 minutes (configurable).
+- After 6 nudges (configurable), the server stops to avoid being annoying.
+- Tapping **Done** marks the task complete and clears the nudge cycle.
+- Tapping **Snooze 5m** in the notification pauses for 5 minutes and resumes nudging.
+- Opening the app and tapping the task clears the nudge cycle automatically.
+- Quiet Hours (set in Settings) pause nudges during your sleep window.
+
+## Tech
+
+Single-file frontend (`public/index.html`), Express + SQLite + node-cron + web-push backend (`server.js`), and a service worker (`public/sw.js`) for the install + push pipeline.

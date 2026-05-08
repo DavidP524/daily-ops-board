@@ -20,8 +20,8 @@ const cron = require('node-cron');
     process.env.VAPID_PRIVATE_KEY = keys.privateKey;
     console.log('[VAPID] Keys auto-generated. Copy these to your .env file:');
     console.log(`VAPID_PUBLIC_KEY=${keys.publicKey}`);
+    console.log(`VAPID_PRIVATE_KEY=${keys.privateKey}`);
 
-    // Write back to .env if the file exists
     const envPath = path.join(__dirname, '.env');
     if (fs.existsSync(envPath)) {
       let envContent = fs.readFileSync(envPath, 'utf8');
@@ -49,8 +49,6 @@ if (!fs.existsSync(dbDir)) {
 }
 
 const db = new Database(process.env.DB_PATH || path.join(__dirname, 'data', 'ops.db'));
-
-// Enable WAL mode for better concurrent read performance
 db.exec('PRAGMA journal_mode = WAL');
 
 db.exec(`
@@ -71,6 +69,9 @@ db.exec(`
     pinnedToday INTEGER DEFAULT 0,
     repeat TEXT DEFAULT 'none',
     repeatEvery TEXT DEFAULT '',
+    lastNudgedAt TEXT DEFAULT '',
+    nudgeCount INTEGER DEFAULT 0,
+    snoozeUntil TEXT DEFAULT '',
     createdAt TEXT,
     updatedAt TEXT
   );
@@ -78,7 +79,8 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS lists (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
-    position INTEGER DEFAULT 0
+    position INTEGER DEFAULT 0,
+    color TEXT DEFAULT 'gray'
   );
 
   CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -95,28 +97,43 @@ db.exec(`
   );
 `);
 
-try {
-  db.prepare('ALTER TABLE tasks ADD COLUMN reminderLeadMinutes TEXT DEFAULT \'\';').run();
-} catch (_) {
-  // Column already exists.
-}
+// Add new columns to tasks if they don't exist (idempotent migration)
+const addCol = (col, def) => {
+  try { db.prepare(`ALTER TABLE tasks ADD COLUMN ${col} ${def};`).run(); } catch (_) {}
+};
+addCol('reminderLeadMinutes', "TEXT DEFAULT ''");
+addCol('lastNudgedAt', "TEXT DEFAULT ''");
+addCol('nudgeCount', 'INTEGER DEFAULT 0');
+addCol('snoozeUntil', "TEXT DEFAULT ''");
+
+try { db.prepare("ALTER TABLE lists ADD COLUMN color TEXT DEFAULT 'gray';").run(); } catch (_) {}
 
 // Seed default lists if empty
 const listCount = db.prepare('SELECT COUNT(*) as cnt FROM lists').get();
 if (listCount.cnt === 0) {
-  const defaultLists = ['General', 'Urgent', 'Follow Up', 'Waiting On', 'Backlog'];
-  const insertList = db.prepare('INSERT INTO lists (name, position) VALUES (?, ?)');
-  defaultLists.forEach((name, i) => insertList.run(name, i));
+  const defaults = [
+    ['General', 'gray'],
+    ['Urgent', 'red'],
+    ['Follow Up', 'blue'],
+    ['Waiting On', 'orange'],
+    ['Backlog', 'purple'],
+  ];
+  const insertList = db.prepare('INSERT INTO lists (name, position, color) VALUES (?, ?, ?)');
+  defaults.forEach(([name, color], i) => insertList.run(name, i, color));
 }
 
 // Seed default settings if empty
 const settingsCount = db.prepare('SELECT COUNT(*) as cnt FROM settings').get();
 if (settingsCount.cnt === 0) {
   const insertSetting = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?)');
-  insertSetting.run('morning_digest_enabled', 'false');
-  insertSetting.run('morning_digest_time', '07:00');
-  insertSetting.run('reminders_enabled', 'false');
-  insertSetting.run('reminder_lead_minutes', '10');
+  insertSetting.run('reminders_enabled', 'true');
+  insertSetting.run('reminder_lead_minutes', '0');
+  insertSetting.run('nudge_interval_minutes', '5');
+  insertSetting.run('max_nudges', '6');
+  insertSetting.run('quiet_hours_enabled', 'false');
+  insertSetting.run('quiet_hours_start', '22:00');
+  insertSetting.run('quiet_hours_end', '07:00');
+  insertSetting.run('user_name', '');
 }
 
 // ---------------------------------------------------------------------------
@@ -125,53 +142,32 @@ if (settingsCount.cnt === 0) {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-];
-if (process.env.RENDER_EXTERNAL_URL) {
-  allowedOrigins.push(process.env.RENDER_EXTERNAL_URL);
-}
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (e.g. same-origin, curl)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
-
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+function safeParseJSON(str, fallback) {
+  try { return JSON.parse(str); } catch (_) { return fallback; }
+}
+
 function parseTask(row) {
   if (!row) return null;
   return {
     ...row,
     checklist: safeParseJSON(row.checklist, []),
     activityLog: safeParseJSON(row.activityLog, []),
+    pinnedToday: !!row.pinnedToday,
   };
-}
-
-function safeParseJSON(str, fallback) {
-  try {
-    return JSON.parse(str);
-  } catch (_) {
-    return fallback;
-  }
 }
 
 function stringifyTask(body) {
   const out = { ...body };
   if (Array.isArray(out.checklist)) out.checklist = JSON.stringify(out.checklist);
   if (Array.isArray(out.activityLog)) out.activityLog = JSON.stringify(out.activityLog);
+  if (typeof out.pinnedToday === 'boolean') out.pinnedToday = out.pinnedToday ? 1 : 0;
   return out;
 }
 
@@ -182,12 +178,27 @@ function getSettings() {
   return obj;
 }
 
+function isInQuietHours(settings, now = new Date()) {
+  if (settings.quiet_hours_enabled !== 'true') return false;
+  const [sh, sm] = (settings.quiet_hours_start || '22:00').split(':').map(Number);
+  const [eh, em] = (settings.quiet_hours_end || '07:00').split(':').map(Number);
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const start = sh * 60 + sm;
+  const end = eh * 60 + em;
+  if (start === end) return false;
+  if (start < end) return cur >= start && cur < end;
+  // Wraps midnight
+  return cur >= start || cur < end;
+}
+
 // ---------------------------------------------------------------------------
 // Push helper
 // ---------------------------------------------------------------------------
-async function sendPush(title, body, icon, actions, data) {
+async function sendPush(payload) {
   const subs = db.prepare('SELECT * FROM push_subscriptions').all();
-  const payload = JSON.stringify({ title, body, icon, badge: icon, actions: actions || [], data: data || {} });
+  if (subs.length === 0) return 0;
+  const json = JSON.stringify(payload);
+  let sent = 0;
 
   for (const sub of subs) {
     const subscription = {
@@ -195,7 +206,8 @@ async function sendPush(title, body, icon, actions, data) {
       keys: { p256dh: sub.p256dh, auth: sub.auth },
     };
     try {
-      await webpush.sendNotification(subscription, payload);
+      await webpush.sendNotification(subscription, json);
+      sent++;
     } catch (err) {
       if (err.statusCode === 410 || err.statusCode === 404) {
         db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(sub.endpoint);
@@ -204,12 +216,13 @@ async function sendPush(title, body, icon, actions, data) {
       }
     }
   }
+  return sent;
 }
 
 // ---------------------------------------------------------------------------
 // Routes — Tasks
 // ---------------------------------------------------------------------------
-app.get('/api/tasks', (req, res) => {
+app.get('/api/tasks', (_req, res) => {
   const rows = db.prepare('SELECT * FROM tasks').all();
   res.json(rows.map(parseTask));
 });
@@ -221,7 +234,7 @@ app.get('/api/tasks/:id', (req, res) => {
 });
 
 app.post('/api/tasks', (req, res) => {
-  const id = `t_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const id = req.body.id || `t_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const now = new Date().toISOString();
   const body = stringifyTask(req.body);
 
@@ -242,15 +255,18 @@ app.post('/api/tasks', (req, res) => {
     pinnedToday: body.pinnedToday ? 1 : 0,
     repeat: body.repeat || 'none',
     repeatEvery: body.repeatEvery || '',
+    lastNudgedAt: '',
+    nudgeCount: 0,
+    snoozeUntil: '',
     createdAt: now,
     updatedAt: now,
   };
 
   db.prepare(`
     INSERT INTO tasks (id, title, nextAction, list, dueDate, reminderTime, reminderLeadMinutes, priority, status,
-      notes, links, checklist, activityLog, pinnedToday, repeat, repeatEvery, createdAt, updatedAt)
+      notes, links, checklist, activityLog, pinnedToday, repeat, repeatEvery, lastNudgedAt, nudgeCount, snoozeUntil, createdAt, updatedAt)
     VALUES (@id, @title, @nextAction, @list, @dueDate, @reminderTime, @reminderLeadMinutes, @priority, @status,
-      @notes, @links, @checklist, @activityLog, @pinnedToday, @repeat, @repeatEvery, @createdAt, @updatedAt)
+      @notes, @links, @checklist, @activityLog, @pinnedToday, @repeat, @repeatEvery, @lastNudgedAt, @nudgeCount, @snoozeUntil, @createdAt, @updatedAt)
   `).run(task);
 
   const created = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
@@ -263,14 +279,29 @@ app.put('/api/tasks/:id', (req, res) => {
 
   const raw = stringifyTask(req.body);
   const ALLOWED_TASK_FIELDS = [
-    'title', 'nextAction', 'list', 'dueDate', 'reminderTime', 'reminderLeadMinutes', 'priority',
-    'status', 'notes', 'links', 'checklist', 'activityLog', 'pinnedToday',
-    'repeat', 'repeatEvery',
+    'title', 'nextAction', 'list', 'dueDate', 'reminderTime', 'reminderLeadMinutes',
+    'priority', 'status', 'notes', 'links', 'checklist', 'activityLog',
+    'pinnedToday', 'repeat', 'repeatEvery', 'lastNudgedAt', 'nudgeCount', 'snoozeUntil',
   ];
   const picked = {};
   for (const key of ALLOWED_TASK_FIELDS) {
     if (key in raw) picked[key] = raw[key];
   }
+
+  // If status flipped to Completed, clear nudge state automatically
+  if (picked.status === 'Completed') {
+    picked.lastNudgedAt = '';
+    picked.nudgeCount = 0;
+    picked.snoozeUntil = '';
+  }
+
+  // If the task is being rescheduled (dueDate or reminderTime changed), reset nudges
+  if ('dueDate' in picked || 'reminderTime' in picked) {
+    picked.lastNudgedAt = '';
+    picked.nudgeCount = 0;
+    picked.snoozeUntil = '';
+  }
+
   const updated = {
     ...existing,
     ...picked,
@@ -282,9 +313,11 @@ app.put('/api/tasks/:id', (req, res) => {
   db.prepare(`
     UPDATE tasks SET
       title = @title, nextAction = @nextAction, list = @list, dueDate = @dueDate,
-      reminderTime = @reminderTime, reminderLeadMinutes = @reminderLeadMinutes, priority = @priority, status = @status, notes = @notes,
+      reminderTime = @reminderTime, reminderLeadMinutes = @reminderLeadMinutes,
+      priority = @priority, status = @status, notes = @notes,
       links = @links, checklist = @checklist, activityLog = @activityLog,
       pinnedToday = @pinnedToday, repeat = @repeat, repeatEvery = @repeatEvery,
+      lastNudgedAt = @lastNudgedAt, nudgeCount = @nudgeCount, snoozeUntil = @snoozeUntil,
       createdAt = @createdAt, updatedAt = @updatedAt
     WHERE id = @id
   `).run(updated);
@@ -301,15 +334,15 @@ app.delete('/api/tasks/:id', (req, res) => {
 // ---------------------------------------------------------------------------
 // Routes — Lists
 // ---------------------------------------------------------------------------
-app.get('/api/lists', (req, res) => {
+app.get('/api/lists', (_req, res) => {
   const rows = db.prepare('SELECT * FROM lists ORDER BY position ASC').all();
   res.json(rows);
 });
 
 app.post('/api/lists', (req, res) => {
-  const { name, position } = req.body;
+  const { name, position, color } = req.body;
   if (!name) return res.status(400).json({ error: 'name is required' });
-  const info = db.prepare('INSERT INTO lists (name, position) VALUES (?, ?)').run(name, position ?? 0);
+  const info = db.prepare('INSERT INTO lists (name, position, color) VALUES (?, ?, ?)').run(name, position ?? 0, color || 'gray');
   const created = db.prepare('SELECT * FROM lists WHERE id = ?').get(info.lastInsertRowid);
   res.status(201).json(created);
 });
@@ -319,7 +352,8 @@ app.put('/api/lists/:id', (req, res) => {
   if (!existing) return res.status(404).json({ error: 'List not found' });
   const name = req.body.name ?? existing.name;
   const position = req.body.position ?? existing.position;
-  db.prepare('UPDATE lists SET name = ?, position = ? WHERE id = ?').run(name, position, req.params.id);
+  const color = req.body.color ?? existing.color;
+  db.prepare('UPDATE lists SET name = ?, position = ?, color = ? WHERE id = ?').run(name, position, color, req.params.id);
   const updated = db.prepare('SELECT * FROM lists WHERE id = ?').get(req.params.id);
   res.json(updated);
 });
@@ -329,31 +363,23 @@ app.delete('/api/lists/:id', (req, res) => {
   res.json({ ok: true });
 });
 
-app.post('/api/lists/reorder', (req, res) => {
-  const { names } = req.body;
-  if (!Array.isArray(names)) return res.status(400).json({ error: 'names must be an array' });
-  const update = db.prepare('UPDATE lists SET position = ? WHERE name = ?');
-  db.exec('BEGIN');
-  try {
-    names.forEach((name, i) => update.run(i, name));
-    db.exec('COMMIT');
-  } catch (e) {
-    db.exec('ROLLBACK');
-    throw e;
-  }
-  res.json({ ok: true });
-});
-
 app.post('/api/lists/replace', (req, res) => {
-  const { names } = req.body;
-  if (!Array.isArray(names)) return res.status(400).json({ error: 'names must be an array' });
-  const clean = [...new Set(names.map(name => String(name || '').trim()).filter(Boolean))];
-  if (!clean.includes('General')) clean.unshift('General');
+  const { lists } = req.body;
+  if (!Array.isArray(lists)) return res.status(400).json({ error: 'lists must be an array of {name, color}' });
+  const clean = [];
+  const seen = new Set();
+  for (const item of lists) {
+    const name = String((item && item.name) || '').trim();
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    clean.push({ name, color: (item && item.color) || 'gray' });
+  }
+  if (!clean.find(l => l.name === 'General')) clean.unshift({ name: 'General', color: 'gray' });
   db.exec('BEGIN');
   try {
     db.prepare('DELETE FROM lists').run();
-    const insert = db.prepare('INSERT INTO lists (name, position) VALUES (?, ?)');
-    clean.forEach((name, i) => insert.run(name, i));
+    const insert = db.prepare('INSERT INTO lists (name, position, color) VALUES (?, ?, ?)');
+    clean.forEach((l, i) => insert.run(l.name, i, l.color));
     db.exec('COMMIT');
   } catch (e) {
     db.exec('ROLLBACK');
@@ -365,24 +391,29 @@ app.post('/api/lists/replace', (req, res) => {
 // ---------------------------------------------------------------------------
 // Routes — Settings
 // ---------------------------------------------------------------------------
-app.get('/api/settings', (req, res) => {
+app.get('/api/settings', (_req, res) => {
   res.json(getSettings());
 });
 
 app.put('/api/settings', (req, res) => {
   const ALLOWED_SETTINGS_KEYS = [
-    'morning_digest_enabled',
-    'morning_digest_time',
     'reminders_enabled',
     'reminder_lead_minutes',
+    'nudge_interval_minutes',
+    'max_nudges',
+    'quiet_hours_enabled',
+    'quiet_hours_start',
+    'quiet_hours_end',
+    'user_name',
+    'theme',
+    'default_list',
+    'default_priority',
   ];
   const filtered = Object.entries(req.body).filter(([key]) => ALLOWED_SETTINGS_KEYS.includes(key));
   const upsert = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
   db.exec('BEGIN');
   try {
-    for (const [key, value] of filtered) {
-      upsert.run(key, String(value));
-    }
+    for (const [key, value] of filtered) upsert.run(key, String(value));
     db.exec('COMMIT');
   } catch (e) {
     db.exec('ROLLBACK');
@@ -392,9 +423,9 @@ app.put('/api/settings', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Routes — Push
+// Routes — Push (subscribe / vapid / actions)
 // ---------------------------------------------------------------------------
-app.get('/api/push/vapid-public-key', (req, res) => {
+app.get('/api/push/vapid-public-key', (_req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
 });
 
@@ -418,83 +449,159 @@ app.post('/api/push/unsubscribe', (req, res) => {
   res.json({ ok: true });
 });
 
-// ---------------------------------------------------------------------------
-// Cron — Reminder notifications (every minute)
-// ---------------------------------------------------------------------------
-cron.schedule('* * * * *', async () => {
-  const settings = getSettings();
-  if (settings.reminders_enabled !== 'true') return;
+// Test push — used by Settings "Send test" button
+app.post('/api/push/test', async (_req, res) => {
+  const sent = await sendPush({
+    title: 'Playbook',
+    body: 'Test notification — you\'re wired up!',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: { url: '/' },
+    actions: [],
+  });
+  res.json({ ok: true, sent });
+});
+
+// Acknowledge a nudge: action = 'done' | 'snooze5' | 'snooze15' | 'snooze60' | 'open'
+app.post('/api/push/ack', (req, res) => {
+  const { taskId, action } = req.body || {};
+  if (!taskId) return res.status(400).json({ error: 'taskId required' });
+  const task = db.prepare('SELECT * FROM tasks WHERE id = ?').get(taskId);
+  if (!task) return res.json({ ok: false, missing: true });
 
   const now = new Date();
+  const isoNow = now.toISOString();
 
-  // Fetch open tasks with both reminderTime and dueDate set
-  const tasks = db.prepare(`
-    SELECT * FROM tasks
-    WHERE status != 'Completed'
-      AND reminderTime != ''
-      AND dueDate != ''
-  `).all();
+  if (action === 'done') {
+    db.prepare(`
+      UPDATE tasks SET status = 'Completed', updatedAt = ?, lastNudgedAt = '', nudgeCount = 0, snoozeUntil = ''
+      WHERE id = ?
+    `).run(isoNow, taskId);
+    return res.json({ ok: true, action: 'done' });
+  }
 
-  for (const task of tasks) {
-    const leadMinutes = parseInt(task.reminderLeadMinutes || settings.reminder_lead_minutes || '10', 10);
-    const leadMs = leadMinutes * 60 * 1000;
-    const targetEpoch = now.getTime() + leadMs;
-    const taskEpoch = new Date(task.dueDate + 'T' + task.reminderTime + ':00').getTime();
-    if (taskEpoch >= targetEpoch - 60000 && taskEpoch <= targetEpoch + 60000) {
-      await sendPush(
-        `Reminder: ${task.title}`,
-        `Due at ${task.reminderTime} - ${task.nextAction || 'Tap to view'}`,
-        '/icons/icon-192.png',
-        [{ action: 'done', title: 'Mark Done' }],
-        { taskId: task.id, url: '/' }
-      );
+  let snoozeMs = 0;
+  if (action === 'snooze5') snoozeMs = 5 * 60 * 1000;
+  else if (action === 'snooze15') snoozeMs = 15 * 60 * 1000;
+  else if (action === 'snooze60') snoozeMs = 60 * 60 * 1000;
+  else if (action === 'open' || action === 'ack') snoozeMs = 0;
+
+  if (snoozeMs > 0) {
+    const until = new Date(now.getTime() + snoozeMs).toISOString();
+    db.prepare(`
+      UPDATE tasks SET snoozeUntil = ?, lastNudgedAt = '', nudgeCount = 0, updatedAt = ?
+      WHERE id = ?
+    `).run(until, isoNow, taskId);
+    return res.json({ ok: true, action, snoozeUntil: until });
+  }
+
+  // Plain ack — just stop the nudge cycle (treat as user has seen it)
+  db.prepare(`
+    UPDATE tasks SET lastNudgedAt = '', nudgeCount = 0, updatedAt = ?
+    WHERE id = ?
+  `).run(isoNow, taskId);
+  res.json({ ok: true, action: 'ack' });
+});
+
+// ---------------------------------------------------------------------------
+// Cron — every minute: trigger reminders + re-fire nudges until acked
+// ---------------------------------------------------------------------------
+cron.schedule('* * * * *', async () => {
+  try {
+    const settings = getSettings();
+    if (settings.reminders_enabled !== 'true') return;
+    const now = new Date();
+    if (isInQuietHours(settings, now)) return;
+
+    const nudgeIntervalMs = (parseInt(settings.nudge_interval_minutes || '5', 10)) * 60 * 1000;
+    const maxNudges = parseInt(settings.max_nudges || '6', 10);
+    const defaultLead = parseInt(settings.reminder_lead_minutes || '0', 10);
+
+    const tasks = db.prepare(`
+      SELECT * FROM tasks
+      WHERE status != 'Completed'
+        AND reminderTime != ''
+        AND dueDate != ''
+    `).all();
+
+    for (const task of tasks) {
+      const lead = parseInt(task.reminderLeadMinutes || String(defaultLead), 10);
+      const dueEpoch = new Date(task.dueDate + 'T' + task.reminderTime + ':00').getTime();
+      const fireEpoch = dueEpoch - lead * 60 * 1000;
+
+      // Skip if not due to fire yet
+      if (now.getTime() < fireEpoch) continue;
+
+      // Skip snoozed
+      if (task.snoozeUntil) {
+        const snoozeEpoch = new Date(task.snoozeUntil).getTime();
+        if (now.getTime() < snoozeEpoch) continue;
+      }
+
+      // Determine if we should fire
+      let shouldFire = false;
+      let isFirstFire = false;
+      const lastNudgedEpoch = task.lastNudgedAt ? new Date(task.lastNudgedAt).getTime() : 0;
+
+      if (!lastNudgedEpoch) {
+        shouldFire = true;
+        isFirstFire = true;
+      } else {
+        if (task.nudgeCount >= maxNudges) continue;
+        if (now.getTime() - lastNudgedEpoch >= nudgeIntervalMs - 1000) {
+          shouldFire = true;
+        }
+      }
+
+      // Don't fire if more than 6 hours past due (avoid surprises)
+      if (now.getTime() - dueEpoch > 6 * 60 * 60 * 1000) continue;
+
+      if (!shouldFire) continue;
+
+      const titlePrefix = isFirstFire ? '' : `Reminder ${task.nudgeCount + 1}: `;
+      const bodyParts = [];
+      if (task.reminderTime) bodyParts.push(`Due at ${formatTime12(task.reminderTime)}`);
+      if (task.nextAction) bodyParts.push(task.nextAction);
+      const body = bodyParts.join(' — ') || 'Tap to view';
+
+      await sendPush({
+        title: `${titlePrefix}${task.title}`,
+        body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        tag: `task-${task.id}`,
+        renotify: true,
+        requireInteraction: true,
+        actions: [
+          { action: 'done', title: 'Done' },
+          { action: 'snooze5', title: 'Snooze 5m' },
+        ],
+        data: { taskId: task.id, url: '/' },
+      });
+
+      db.prepare(`
+        UPDATE tasks SET lastNudgedAt = ?, nudgeCount = nudgeCount + 1, snoozeUntil = ''
+        WHERE id = ?
+      `).run(now.toISOString(), task.id);
     }
+  } catch (err) {
+    console.error('[Cron] Error:', err.message);
   }
 });
 
-// ---------------------------------------------------------------------------
-// Cron — Morning digest (every minute, fires once per day at configured time)
-// ---------------------------------------------------------------------------
-let lastDigestDate = '';
-
-cron.schedule('* * * * *', async () => {
-  const settings = getSettings();
-  if (settings.morning_digest_enabled !== 'true') return;
-
-  const digestTime = settings.morning_digest_time || '07:00';
-  const now = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  const currentHHMM = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-
-  if (currentHHMM !== digestTime) return;
-  if (lastDigestDate === todayStr) return;
-
-  lastDigestDate = todayStr;
-
-  const tasks = db.prepare(`
-    SELECT * FROM tasks
-    WHERE status = 'Open'
-      AND dueDate != ''
-      AND dueDate <= ?
-  `).all(todayStr);
-
-  if (tasks.length === 0) return;
-
-  await sendPush(
-    'Daily Ops — Your Day Ahead',
-    `${tasks.length} task${tasks.length !== 1 ? 's' : ''} need attention today`,
-    '/icons/icon-192.png',
-    [],
-    { url: '/' }
-  );
-});
+function formatTime12(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return hhmm;
+  const suffix = h >= 12 ? 'PM' : 'AM';
+  const hour = ((h + 11) % 12) + 1;
+  return `${hour}:${String(m).padStart(2, '0')} ${suffix}`;
+}
 
 // ---------------------------------------------------------------------------
-// Start — local dev or Vercel serverless
+// Start
 // ---------------------------------------------------------------------------
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Daily Ops server running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`Playbook server running on http://localhost:${PORT}`));
 }
 
 module.exports = app;

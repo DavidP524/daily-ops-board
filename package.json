@@ -1,7 +1,7 @@
 {
-  "name": "daily-ops-board",
-  "version": "1.0.0",
-  "description": "Daily Ops Board — iOS-optimized PWA task manager",
+  "name": "the-playbook",
+  "version": "2.0.0",
+  "description": "The Playbook — iPhone-first PWA task manager with persistent push notifications",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
