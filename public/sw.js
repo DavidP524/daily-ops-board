@@ -1,5 +1,5 @@
 // The Playbook — Service Worker
-const CACHE_NAME = 'playbook-v3';
+const CACHE_NAME = 'playbook-v4';
 const APP_SHELL = [
   '/',
   '/manifest.json',

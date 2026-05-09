@@ -1834,6 +1834,213 @@
       .bottom-nav { width: min(390px, calc(100% - 14px)); }
     }
 
+    /* Playbook reference design layer */
+    :root {
+      --panel: rgba(255,255,255,.075);
+      --head-border: rgba(255,255,255,.10);
+      --button-bg: rgba(255,255,255,.10);
+      --button-hover: rgba(255,255,255,.16);
+      --input-bg: rgba(3,7,18,.66);
+      --input-border: rgba(255,255,255,.16);
+      --sidebar-bg: rgba(255,255,255,.045);
+      --shadow: 0 8px 32px rgba(0,0,0,.38), 0 2px 8px rgba(0,0,0,.22);
+      --shadow-card: 0 4px 24px rgba(0,0,0,.32), 0 1px 4px rgba(0,0,0,.18);
+      --bg-grad: radial-gradient(circle at 15% 8%, rgba(96,165,250,.20), transparent 33%),
+                 radial-gradient(circle at 80% 10%, rgba(196,181,253,.12), transparent 28%),
+                 radial-gradient(circle at 78% 82%, rgba(52,211,153,.10), transparent 28%),
+                 linear-gradient(145deg, #070a12, #111827 52%, #0b0f19);
+      --surface: var(--panel);
+      --surface-2: var(--panel);
+      --surface-3: rgba(255,255,255,.10);
+      --text: #f8fafc;
+      --muted: #9ca3af;
+      --border: rgba(255,255,255,.14);
+      --border-2: rgba(255,255,255,.18);
+      --accent: #60a5fa;
+      --accent-soft: rgba(96,165,250,.15);
+      --r-lg: 16px;
+      --r-md: 11px;
+      --r-sm: 9px;
+    }
+    [data-theme="light"] {
+      --panel: rgba(255,255,255,.92);
+      --head-border: rgba(17,24,39,.07);
+      --button-bg: rgba(255,255,255,.80);
+      --button-hover: rgba(255,255,255,1);
+      --input-bg: rgba(255,255,255,.95);
+      --input-border: rgba(17,24,39,.12);
+      --sidebar-bg: rgba(17,24,39,.03);
+      --shadow: 0 8px 28px rgba(15,23,42,.12), 0 2px 6px rgba(15,23,42,.07);
+      --shadow-card: 0 2px 12px rgba(15,23,42,.08), 0 1px 3px rgba(15,23,42,.05);
+      --bg-grad: radial-gradient(circle at 18% 4%, rgba(0,122,255,.08), transparent 30%),
+                 radial-gradient(circle at 85% 2%, rgba(175,82,222,.06), transparent 28%),
+                 linear-gradient(145deg, #f2f2f7, #eef2f7 58%, #fff);
+      --surface: var(--panel);
+      --surface-2: var(--panel);
+      --surface-3: rgba(255,255,255,.98);
+      --text: #111827;
+      --muted: #6b7280;
+      --border: rgba(17,24,39,.09);
+      --border-2: rgba(17,24,39,.14);
+      --accent: #007aff;
+      --accent-soft: rgba(0,122,255,.12);
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+      font-size: 14px;
+      background: var(--bg-grad);
+    }
+    .shell { max-width: 720px; padding-bottom: 96px; }
+    .task-card,
+    .settings-card,
+    .cal-tasks,
+    .install-banner,
+    .focus-panel,
+    .modal,
+    .sheet {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+    .settings-card { overflow: hidden; }
+    .settings-group-title,
+    .field-label,
+    .ct-head,
+    .section-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .btn,
+    .filter-btn,
+    .chip,
+    .quick-date,
+    .cal-nav-btn,
+    .settings-row.tap,
+    .sheet-close,
+    .fab {
+      border-radius: var(--r-md);
+      transition: background .12s ease, transform .1s ease, box-shadow .12s ease, opacity .1s ease;
+    }
+    .btn,
+    .filter-btn,
+    .cal-nav-btn,
+    .quick-date,
+    .chip {
+      background: var(--button-bg);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+    .btn:hover,
+    .filter-btn:hover,
+    .cal-nav-btn:hover,
+    .quick-date:hover,
+    .chip:hover {
+      background: var(--button-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,.14);
+    }
+    .btn:active,
+    .filter-btn:active,
+    .cal-nav-btn:active,
+    .quick-date:active,
+    .chip:active {
+      transform: translateY(0);
+      opacity: .82;
+      box-shadow: none;
+    }
+    .btn.primary,
+    .quick-date.active,
+    .chip.active,
+    .vp.active {
+      background: rgba(96,165,250,.95);
+      border-color: rgba(147,197,253,.65);
+      color: #06111f;
+      font-weight: 700;
+      box-shadow: none;
+    }
+    [data-theme="light"] .btn.primary,
+    [data-theme="light"] .quick-date.active,
+    [data-theme="light"] .chip.active,
+    [data-theme="light"] .vp.active {
+      background: #007aff;
+      border-color: #007aff;
+      color: #fff;
+    }
+    .input,
+    select.input,
+    textarea.input,
+    .search-wrap input,
+    .picker-row,
+    .quick-capture {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: var(--r-md);
+    }
+    .input:focus,
+    select.input:focus,
+    textarea.input:focus,
+    .search-wrap input:focus,
+    .quick-capture:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+      outline: none;
+    }
+    .toast {
+      left: 50%;
+      right: auto;
+      bottom: calc(90px + env(safe-area-inset-bottom));
+      transform: translateX(-50%) translateY(10px);
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .settings-page-head {
+      padding: 8px 4px 18px;
+    }
+    .settings-page-body {
+      display: grid;
+      gap: 18px;
+    }
+    .settings-page-body .settings-group {
+      margin-bottom: 0;
+    }
+    .settings-page-body .settings-card {
+      box-shadow: var(--shadow-card);
+    }
+    .settings-row + .settings-row::before {
+      background: var(--head-border);
+    }
+    .settings-row.tap:active {
+      background: var(--sidebar-bg);
+    }
+    .bottom-nav {
+      border-color: var(--border);
+      background: rgba(7,10,18,.72);
+      box-shadow: var(--shadow);
+    }
+    [data-theme="light"] .bottom-nav {
+      background: rgba(255,255,255,.82);
+    }
+    .bnav-btn.active {
+      color: var(--accent);
+      background: rgba(96,165,250,.18);
+      border: 1px solid rgba(96,165,250,.38);
+    }
+    .fab.is-hidden { display: none; }
+
     /* viewport sizing safety */
     .sheet-body, .activity-log, .wheel-col { overscroll-behavior: contain; }
   </style>
@@ -1937,6 +2144,19 @@
   </section>
 
   <!-- ─── FAB ────────────────────────────────────────────────────── -->
+  <section id="settingsTab" class="tab-panel">
+    <div class="shell settings-page-shell">
+      <div class="settings-page-head">
+        <div>
+          <div class="hero-kicker">Preferences</div>
+          <h1 class="hero-title">Settings</h1>
+          <p class="hero-sub">Tune the app around how your day actually works.</p>
+        </div>
+      </div>
+      <div id="settingsPageBody" class="settings-page-body"></div>
+    </div>
+  </section>
+
   <button class="fab tappable" id="fabAdd" aria-label="Add task">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
   </button>
@@ -2098,19 +2318,6 @@
   </div>
 
   <!-- ─── Settings Sheet ──────────────────────────────────────────── -->
-  <div class="sheet-overlay" id="settingsOverlay">
-    <div class="sheet">
-      <div class="sheet-grip"><div class="sheet-handle"></div></div>
-      <div class="sheet-head">
-        <h2>Settings</h2>
-        <button class="sheet-close tappable" data-close="settingsOverlay">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-        </button>
-      </div>
-      <div class="sheet-body" id="settingsSheetBody"></div>
-    </div>
-  </div>
-
   <input type="file" id="importFile" accept="application/json" style="display:none" />
 
   <script>
@@ -2363,7 +2570,7 @@
         });
       });
     }
-    ['addSheetOverlay','detailOverlay','pickerOverlay','settingsOverlay','completedOverlay'].forEach(wireSheetDrag);
+    ['addSheetOverlay','detailOverlay','pickerOverlay','completedOverlay'].forEach(wireSheetDrag);
 
     /* ─── Sync layer (best-effort, optional) ─────────────────────────── */
     async function api(path, opts) {
@@ -2775,16 +2982,17 @@
     });
 
     /* ─── Tabs / nav ────────────────────────────────────────────────── */
+    function settingsTarget() {
+      return document.getElementById('settingsPageBody') || document.getElementById('settingsSheetBody');
+    }
+
     function switchTab(id) {
-      if (id === 'settingsTab') {
-        renderSettingsBody(document.getElementById('settingsSheetBody'));
-        openSheet('settingsOverlay');
-        return;
-      }
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === id));
       document.querySelectorAll('.bnav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
+      document.getElementById('fabAdd').classList.toggle('is-hidden', id === 'settingsTab');
       if (id === 'calendarTab') renderCalendar();
       if (id === 'tasksTab')    renderHero();
+      if (id === 'settingsTab') renderSettingsBody(settingsTarget());
     }
     document.querySelectorAll('.bnav-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
@@ -3785,7 +3993,7 @@
           syncListsReplace();
           tasks.forEach(t => { if (t.list === newName) debouncedTaskSync(t.id, t); });
           renderAll();
-          renderSettingsBody(document.getElementById('settingsSheetBody'));
+          renderSettingsBody(settingsTarget());
           showToast('Renamed');
         });
         row.querySelector('.ldot-btn').addEventListener('click', () => openColorPicker(name));
@@ -3795,14 +4003,14 @@
         if (i <= 0) return;
         [customLists[i-1], customLists[i]] = [customLists[i], customLists[i-1]];
         saveLists(); syncListsReplace();
-        renderSettingsBody(document.getElementById('settingsSheetBody'));
+        renderSettingsBody(settingsTarget());
       }));
       target.querySelectorAll('[data-down]').forEach(b => b.addEventListener('click', () => {
         const i = Number(b.dataset.down);
         if (i >= customLists.length - 1) return;
         [customLists[i+1], customLists[i]] = [customLists[i], customLists[i+1]];
         saveLists(); syncListsReplace();
-        renderSettingsBody(document.getElementById('settingsSheetBody'));
+        renderSettingsBody(settingsTarget());
       }));
       target.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
         const name = b.dataset.del;
@@ -3818,7 +4026,7 @@
         saveLists(); saveTasks(); saveDefaults();
         syncListsReplace();
         renderAll();
-        renderSettingsBody(document.getElementById('settingsSheetBody'));
+        renderSettingsBody(settingsTarget());
         showToast('List deleted');
       }));
     }
@@ -3865,7 +4073,7 @@
         saveLists();
         syncListsReplace();
         renderAll();
-        renderSettingsBody(document.getElementById('settingsSheetBody'));
+        renderSettingsBody(settingsTarget());
         showToast('Colour updated');
       };
       render();
@@ -4005,7 +4213,7 @@
         if (Number.isFinite(data.completedCount)) { completedCount = data.completedCount; localStorage.setItem(KEYS.completedCount, String(completedCount)); }
         saveTasks(); saveLists(); saveDefaults(); saveReminderSettings();
         renderAll();
-        renderSettingsBody(document.getElementById('settingsSheetBody'));
+        renderSettingsBody(settingsTarget());
         showToast('Backup restored');
       } catch (err) {
         showToast('Could not import file');
@@ -4198,6 +4406,7 @@
       const sortLabels = { smart: 'Smart', due: 'Due', priority: 'Priority', created: 'Newest' };
       document.getElementById('sortBtnLabel').textContent = sortLabels[currentSort] || 'Smart';
       if (document.getElementById('calendarTab').classList.contains('active')) renderCalendar();
+      if (document.getElementById('settingsTab').classList.contains('active')) renderSettingsBody(settingsTarget());
     }
 
     /* ─── Service worker & push message handling ───────────────────── */
