@@ -281,7 +281,10 @@
       font-size: 14px;
       font-weight: 700;
       letter-spacing: -0.01em;
+      visibility: hidden;
     }
+    .task-card-wrap.swipe-showing-right .swipe-underlay.right,
+    .task-card-wrap.swipe-showing-left .swipe-underlay.left { visibility: visible; }
     .swipe-underlay svg { width: 18px; height: 18px; margin-right: 8px; }
     .swipe-underlay.right { background: var(--green-soft); color: var(--green); justify-content: flex-start; }
     .swipe-underlay.left { background: var(--red-soft); color: var(--red); justify-content: flex-end; }
@@ -1991,13 +1994,13 @@
           <div class="vp-num" id="myDayCount">0</div>
           <div class="vp-label">Now</div>
         </button>
-        <button class="vp" data-view="Today">
-          <div class="vp-num" id="pastDueCount">0</div>
-          <div class="vp-label">Today</div>
+        <button class="vp" data-view="Next 7 Days">
+          <div class="vp-num" id="weekCount">0</div>
+          <div class="vp-label">Week</div>
         </button>
-        <button class="vp" data-view="Later">
-          <div class="vp-num" id="laterCount">0</div>
-          <div class="vp-label">Later</div>
+        <button class="vp" data-view="Inbox">
+          <div class="vp-num" id="inboxCount">0</div>
+          <div class="vp-label">Inbox</div>
         </button>
         <button class="vp" data-view="Completed">
           <div class="vp-num" id="completedViewCount">0</div>
@@ -2572,13 +2575,23 @@
     function isMyDay(t) { return !isDone(t) && (t.pinnedToday || isToday(t) || isOverdue(t)); }
     function isAttention(t) { return !isDone(t) && (isOverdue(t) || isAttentionList(t.list)); }
 
+    function isNext7Days(t) {
+      if (isDone(t) || !t.dueDate || isToday(t) || isOverdue(t)) return false;
+      const due = new Date(t.dueDate + 'T00:00:00');
+      const cutoff = new Date(); cutoff.setHours(0,0,0,0); cutoff.setDate(cutoff.getDate() + 7);
+      return due <= cutoff;
+    }
+    function isInbox(t) { return !isDone(t) && !t.dueDate; }
+
     function filterByView(t, view) {
-      if (view === 'My Day')      return isMyDay(t);
-      if (view === 'Today')       return isToday(t) || isOverdue(t);
-      if (view === 'Later')       return !isDone(t) && !isToday(t) && !isOverdue(t);
-      if (view === 'Past Due')    return isOverdue(t);
-      if (view === 'Open Tasks')  return !isDone(t);
-      if (view === 'Completed')   return isDone(t);
+      if (view === 'My Day')        return isMyDay(t);
+      if (view === 'Next 7 Days')   return isNext7Days(t);
+      if (view === 'Inbox')         return isInbox(t);
+      if (view === 'Today')         return isToday(t) || isOverdue(t);
+      if (view === 'Later')         return !isDone(t) && !isToday(t) && !isOverdue(t);
+      if (view === 'Past Due')      return isOverdue(t);
+      if (view === 'Open Tasks')    return !isDone(t);
+      if (view === 'Completed')     return isDone(t);
       return !isDone(t) && t.list === view;
     }
     function countForView(v) { return tasks.filter(t => filterByView(t, v)).length; }
@@ -2708,14 +2721,16 @@
           currentView === 'Completed' ? `${countForView('Completed')} task${countForView('Completed')===1?'':'s'} completed.` :
           `${countForView(currentView)} in ${currentView}.`;
       document.getElementById('heroKicker').textContent = `${greeting}${userName ? `, ${userName}` : ''}`;
-      document.getElementById('heroTitle').textContent = currentView === 'My Day' ? 'Today' : currentView;
+      const _viewTitles = { 'My Day': 'Today', 'Next 7 Days': 'This Week', 'Inbox': 'Inbox', 'Completed': 'Done' };
+      document.getElementById('heroTitle').textContent = _viewTitles[currentView] || currentView;
       document.getElementById('heroSub').textContent = sub;
     }
 
     function renderViewPills() {
       document.getElementById('myDayCount').textContent = countForView('My Day');
-      document.getElementById('pastDueCount').textContent = countForView('Past Due');
-      document.getElementById('openCount').textContent = countForView('Open Tasks');
+      document.getElementById('weekCount').textContent = countForView('Next 7 Days');
+      document.getElementById('inboxCount').textContent = countForView('Inbox');
+      document.getElementById('completedViewCount').textContent = countForView('Completed');
       document.querySelectorAll('.view-pills .vp').forEach(vp => {
         vp.classList.toggle('active', vp.dataset.view === currentView && !filterList);
       });
@@ -2807,21 +2822,30 @@
         </div>`;
         return;
       }
-      listEl.innerHTML = vis.map(t => `
-        <div class="task-card-wrap" data-id="${escapeHtml(t.id)}">
-          <div class="swipe-underlay right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Done</div>
+      listEl.innerHTML = vis.map(t => {
+        const done = isDone(t);
+        const rightUnderlay = done
+          ? `<div class="swipe-underlay right" style="background:var(--green-soft);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Reopen</div>`
+          : `<div class="swipe-underlay right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Done</div>`;
+        const actionBtn = done
+          ? `<button class="complete-btn" data-reopen="${escapeHtml(t.id)}" aria-label="Re-open task" style="background:rgba(255,255,255,0.08);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+             </button>`
+          : `<button class="complete-btn" data-done="${escapeHtml(t.id)}" aria-label="Mark done">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+             </button>`;
+        return `<div class="task-card-wrap" data-id="${escapeHtml(t.id)}" data-done="${done}">
+          ${rightUnderlay}
           <div class="swipe-underlay left">Delete<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-          <article class="task-card ${isDone(t)?'done':''} ${isAttention(t)?'attention':''}" style="--list-color:${listColor(t.list)}" data-id="${escapeHtml(t.id)}">
+          <article class="task-card ${done?'done':''} ${isAttention(t)?'attention':''}" style="--list-color:${listColor(t.list)}" data-id="${escapeHtml(t.id)}">
             <div class="task-title">${escapeHtml(t.title)}</div>
             ${dueLine(t)}
-            ${t.nextAction && !isDone(t) ? `<div class="task-next"><strong>Next</strong> ${escapeHtml(t.nextAction)}</div>` : ''}
+            ${t.nextAction && !done ? `<div class="task-next"><strong>Next</strong> ${escapeHtml(t.nextAction)}</div>` : ''}
             <div class="task-meta">${badgesFor(t).join('')}</div>
-            ${!isDone(t) ? `<button class="complete-btn" data-done="${escapeHtml(t.id)}" aria-label="Mark done">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-            </button>` : ''}
+            ${actionBtn}
           </article>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
       // Wire taps
       listEl.querySelectorAll('.task-card').forEach(card => {
         card.addEventListener('click', e => {
@@ -2829,8 +2853,11 @@
           openTaskDetail(card.dataset.id);
         });
       });
-      listEl.querySelectorAll('.complete-btn').forEach(b => {
+      listEl.querySelectorAll('.complete-btn[data-done]').forEach(b => {
         b.addEventListener('click', e => { e.stopPropagation(); completeTask(b.dataset.done); });
+      });
+      listEl.querySelectorAll('.complete-btn[data-reopen]').forEach(b => {
+        b.addEventListener('click', e => { e.stopPropagation(); updateTask(b.dataset.reopen, { status: 'Open' }); showToast('Task re-opened'); vibrate(15); });
       });
       wireSwipes(listEl);
     }
@@ -2863,6 +2890,8 @@
           if (locked !== 'h') return;
           dx = cx;
           card.style.transform = `translateX(${dx}px)`;
+          wrap.classList.toggle('swipe-showing-right', dx > 20);
+          wrap.classList.toggle('swipe-showing-left', dx < -20);
         }, { passive: true });
 
         card.addEventListener('touchend', async () => {
@@ -2870,15 +2899,21 @@
           dragging = false;
           card.style.transition = 'transform .26s var(--ease, cubic-bezier(0.32, 0.72, 0, 1))';
           const id = wrap.dataset.id;
+          const isTaskDone = wrap.dataset.done === 'true';
           if (dx > 80) {
             card.style.transform = 'translateX(110%)';
-            setTimeout(() => completeTask(id), 220);
+            if (isTaskDone) {
+              setTimeout(() => { updateTask(id, { status: 'Open' }); showToast('Task re-opened'); }, 220);
+            } else {
+              setTimeout(() => completeTask(id), 220);
+            }
           } else if (dx < -80) {
             card.style.transform = 'translateX(-110%)';
             setTimeout(() => deleteTask(id), 220);
           } else {
             card.style.transform = 'translateX(0)';
           }
+          wrap.classList.remove('swipe-showing-right', 'swipe-showing-left');
           dx = 0; locked = null;
         });
       });
@@ -4198,7 +4233,7 @@
       const installBanner = document.getElementById('installBanner');
       if (!btn) return;
 
-      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+      if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
         setPushStatus('Push not supported in this browser', 'red');
         btn.style.display = 'none';
         return;
@@ -4208,11 +4243,17 @@
       const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
       if (isIOS && !isStandalone) {
         installBanner.classList.add('show');
-        setPushStatus('Tap Share → Add to Home Screen first', 'muted');
+        setPushStatus('Add to Home Screen first, then enable push', 'muted');
         btn.style.display = 'none';
         return;
       } else {
         installBanner.classList.remove('show');
+      }
+
+      if (Notification.permission === 'denied') {
+        setPushStatus('Blocked — go to iOS Settings → Notifications → enable for this app', 'red');
+        btn.style.display = 'none';
+        return;
       }
 
       if (Notification.permission === 'granted') {
@@ -4220,17 +4261,46 @@
           const reg = await navigator.serviceWorker.ready;
           const sub = await reg.pushManager.getSubscription();
           if (sub) {
+            // Check that this subscription was created with our current VAPID key.
+            // If the stored key doesn't match we must unsubscribe and prompt re-enable.
+            let serverKey = null;
+            try { const v = await api('/api/push/vapid-public-key'); serverKey = v && v.publicKey; } catch {}
+            const storedKey = localStorage.getItem('pushVapidKey');
+
+            if (serverKey && storedKey !== serverKey) {
+              // Stale subscription — wrong VAPID key. Clear and ask user to re-enable.
+              try { await sub.unsubscribe(); } catch {}
+              localStorage.removeItem('pushSubscription');
+              localStorage.removeItem('pushVapidKey');
+              btn.style.display = 'inline-flex';
+              btn.disabled = false;
+              btn.textContent = 'Enable';
+              setPushStatus('Tap Enable to reconnect push notifications', 'muted');
+              return;
+            }
+
+            // Re-register with server on every load (handles wiped /tmp DB on Vercel cold start)
+            const subObj = {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: arrayBufferToBase64(sub.getKey('p256dh')),
+                auth: arrayBufferToBase64(sub.getKey('auth')),
+              },
+            };
+            try {
+              await api('/api/push/subscribe', { method: 'POST', body: JSON.stringify(subObj) });
+              localStorage.setItem('pushSubscription', JSON.stringify(subObj));
+              if (serverKey) localStorage.setItem('pushVapidKey', serverKey);
+            } catch {}
+
             setPushStatus('Active on this device', 'green');
             btn.style.display = 'none';
             return;
           }
         } catch {}
       }
-      if (Notification.permission === 'denied') {
-        setPushStatus('Notifications blocked — enable in iOS Settings', 'red');
-        btn.style.display = 'none';
-        return;
-      }
+
+      // No subscription yet — show Enable button
       btn.style.display = 'inline-flex';
       btn.disabled = false;
       btn.textContent = 'Enable';
@@ -4241,28 +4311,48 @@
       const btn = document.getElementById('enablePushBtn');
       if (!btn) return;
       btn.disabled = true;
-      btn.textContent = 'Asking…';
+      btn.textContent = 'Connecting…';
       try {
         const perm = await Notification.requestPermission();
         if (perm !== 'granted') {
-          setPushStatus('Permission denied', 'red');
+          setPushStatus('Permission denied — go to iOS Settings → Notifications and allow this app', 'red');
           btn.disabled = false;
           btn.textContent = 'Enable';
           return;
         }
+
         const vapid = await api('/api/push/vapid-public-key');
-        if (!vapid || !vapid.publicKey) throw new Error('Missing VAPID key');
+        if (!vapid || !vapid.publicKey) throw new Error('Could not load server key — check your connection');
+
         const reg = await navigator.serviceWorker.ready;
+
+        // Unsubscribe any stale subscription before creating a fresh one
+        try {
+          const old = await reg.pushManager.getSubscription();
+          if (old) await old.unsubscribe();
+        } catch {}
+
         const sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapid.publicKey),
         });
-        const subObj = { endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey('p256dh')), auth: arrayBufferToBase64(sub.getKey('auth')) } };
+
+        const subObj = {
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: arrayBufferToBase64(sub.getKey('p256dh')),
+            auth: arrayBufferToBase64(sub.getKey('auth')),
+          },
+        };
         await api('/api/push/subscribe', { method: 'POST', body: JSON.stringify(subObj) });
-        try { localStorage.setItem('pushSubscription', JSON.stringify(subObj)); } catch {}
+        try {
+          localStorage.setItem('pushSubscription', JSON.stringify(subObj));
+          localStorage.setItem('pushVapidKey', vapid.publicKey);
+        } catch {}
+
         setPushStatus('Active on this device', 'green');
         btn.style.display = 'none';
-        showToast('Notifications enabled');
+        showToast('Push notifications enabled');
       } catch (e) {
         setPushStatus('Error: ' + e.message, 'red');
         btn.disabled = false;
@@ -4334,10 +4424,12 @@
         sub = dayCount === 0 ? 'Nothing on your plate today.' :
           overdue > 0 ? `${dayCount} task${dayCount===1?'':'s'} today, ${overdue} past due.` :
           `${dayCount} task${dayCount===1?'':'s'} ${needsVerb(dayCount)} attention.`;
-      } else if (currentView === 'Today') {
-        sub = `${countForView('Today')} task${countForView('Today')===1?'':'s'} due today or overdue.`;
-      } else if (currentView === 'Later') {
-        sub = `${countForView('Later')} task${countForView('Later')===1?'':'s'} waiting for later.`;
+      } else if (currentView === 'Next 7 Days') {
+        const wc = countForView('Next 7 Days');
+        sub = wc === 0 ? 'Nothing scheduled for the next 7 days.' : `${wc} task${wc===1?'':'s'} coming up this week.`;
+      } else if (currentView === 'Inbox') {
+        const ic = countForView('Inbox');
+        sub = ic === 0 ? 'Inbox is clear.' : `${ic} task${ic===1?'':'s'} without a due date.`;
       } else if (currentView === 'Completed') {
         sub = `${countForView('Completed')} task${countForView('Completed')===1?'':'s'} completed.`;
       } else if (currentView === 'Past Due') {
@@ -4346,14 +4438,15 @@
         sub = `${countForView('Open Tasks')} open task${countForView('Open Tasks')===1?'':'s'}.`;
       }
       document.getElementById('heroKicker').textContent = `${greeting}${userName ? `, ${userName}` : ''}`;
-      document.getElementById('heroTitle').textContent = currentView === 'My Day' ? 'Today' : currentView;
+      const _viewTitles = { 'My Day': 'Today', 'Next 7 Days': 'This Week', 'Inbox': 'Inbox', 'Completed': 'Done' };
+      document.getElementById('heroTitle').textContent = _viewTitles[currentView] || currentView;
       document.getElementById('heroSub').textContent = sub;
     }
 
     function renderViewPills() {
       document.getElementById('myDayCount').textContent = countForView('My Day');
-      document.getElementById('pastDueCount').textContent = countForView('Today');
-      document.getElementById('laterCount').textContent = countForView('Later');
+      document.getElementById('weekCount').textContent = countForView('Next 7 Days');
+      document.getElementById('inboxCount').textContent = countForView('Inbox');
       document.getElementById('completedViewCount').textContent = countForView('Completed');
       document.querySelectorAll('.view-pills .vp').forEach(vp => {
         vp.classList.toggle('active', vp.dataset.view === currentView && !filterList);
