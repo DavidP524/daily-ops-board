@@ -450,15 +450,31 @@ app.post('/api/push/unsubscribe', (req, res) => {
 });
 
 // Test push — used by Settings "Send test" button
-app.post('/api/push/test', async (_req, res) => {
-  const sent = await sendPush({
+// Accepts optional { subscription } in body so the client can pass its stored
+// subscription directly, bypassing ephemeral DB state on serverless cold starts.
+app.post('/api/push/test', async (req, res) => {
+  const payload = {
     title: 'Playbook',
     body: 'Test notification — you\'re wired up!',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     data: { url: '/' },
     actions: [],
-  });
+  };
+
+  if (req.body && req.body.subscription) {
+    try {
+      await webpush.sendNotification(req.body.subscription, JSON.stringify(payload));
+      return res.json({ ok: true, sent: 1 });
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        return res.json({ ok: false, sent: 0, error: 'subscription_expired' });
+      }
+      return res.json({ ok: false, sent: 0, error: err.message });
+    }
+  }
+
+  const sent = await sendPush(payload);
   res.json({ ok: true, sent });
 });
 

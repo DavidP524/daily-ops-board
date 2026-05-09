@@ -381,26 +381,6 @@
     .complete-btn:active { transform: translateY(-50%) scale(0.92); background: var(--green); color: #fff; }
     .complete-btn svg { width: 16px; height: 16px; }
 
-    /* ─── FAB ─────────────────────────────────────────────────────────── */
-    .fab {
-      position: fixed;
-      bottom: calc(86px + env(safe-area-inset-bottom));
-      right: 18px;
-      width: 58px;
-      height: 58px;
-      border-radius: 999px;
-      background: var(--accent);
-      color: #fff;
-      box-shadow: 0 8px 28px rgba(10,132,255,0.50), 0 2px 6px rgba(0,0,0,0.20), 0 0 0 0.5px rgba(255,255,255,0.12) inset;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      transition: transform .14s var(--ease), box-shadow .14s var(--ease);
-    }
-    .fab:active { transform: scale(0.90); box-shadow: 0 4px 14px rgba(10,132,255,0.50); }
-    .fab svg { width: 26px; height: 26px; stroke-width: 2.4; }
-
     /* ─── Bottom nav ─────────────────────────────────────────────────── */
     .bottom-nav {
       position: fixed;
@@ -1367,40 +1347,6 @@
     .dp-foot-btn:active { transform: scale(0.96); }
     .dp-foot-btn.danger { background: var(--red-soft); color: var(--red); }
 
-    /* ─── Wheel pickers (date/time) ──────────────────────────────────── */
-    .wheel-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .wheel-col {
-      max-height: 180px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      border-radius: 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      padding: 4px;
-      scroll-snap-type: y mandatory;
-    }
-    .wheel-col::-webkit-scrollbar { width: 0; }
-    .wheel-opt {
-      width: 100%;
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 9px;
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--text-2);
-      scroll-snap-align: center;
-      transition: all .14s var(--ease);
-    }
-    .wheel-opt:active { transform: scale(0.94); }
-    .wheel-opt.active { background: var(--accent); color: #fff; }
-
     /* Reminder option list (radio-like) */
     .reminder-options { display: grid; gap: 8px; }
     .reminder-option {
@@ -1503,92 +1449,34 @@
     .hero-kicker { font-size: 13px; letter-spacing: 0; }
     .hero-title { font-size: 28px; letter-spacing: -0.025em; }
     .hero-sub { font-size: 13px; margin-top: 6px; }
-    .focus-panel {
-      margin: 10px 0 10px;
-      border-radius: var(--r-lg);
-      border: 1px solid rgba(10,132,255,0.16);
-      background: linear-gradient(180deg, rgba(19,26,40,0.96), rgba(14,19,29,0.92));
-      box-shadow: 0 1px 0 rgba(255,255,255,0.055) inset, 0 18px 48px rgba(0,0,0,0.26);
-      overflow: hidden;
+    /* ─── Quick Capture Bar (fixed above tab bar) ─────────────────────── */
+    .quick-capture-bar {
+      position: fixed;
+      bottom: calc(72px + env(safe-area-inset-bottom));
+      left: 0;
+      right: 0;
+      z-index: 90;
+      padding: 8px 12px;
+      background: rgba(7,10,18,0.82);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
     }
-    .focus-panel.empty { display: none; }
-    .focus-card {
-      padding: 14px;
-      display: grid;
-      gap: 11px;
-    }
-    .focus-label {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      color: var(--accent);
-      font-size: 10.5px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .focus-dot {
-      width: 22px;
-      height: 22px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      color: #fff;
-      background: var(--accent);
-      box-shadow: 0 0 22px rgba(10,132,255,0.5);
-    }
-    .focus-title {
-      margin: 0;
-      color: var(--text);
-      font-size: 18px;
-      line-height: 1.2;
-      font-weight: 750;
-      letter-spacing: -0.02em;
-    }
-    .focus-meta { color: var(--muted); font-size: 13px; }
-    .focus-next {
-      border-radius: 13px;
-      background: rgba(255,255,255,0.045);
-      border: 1px solid rgba(255,255,255,0.055);
-      padding: 10px 11px;
-      color: var(--text-2);
-      font-size: 13px;
-      line-height: 1.35;
-    }
-    .focus-next span {
-      display: block;
-      color: var(--muted);
-      font-size: 10.5px;
-      font-weight: 750;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 3px;
-    }
-    .focus-actions {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr 1fr 1.2fr;
-      gap: 8px;
-    }
-    .focus-actions .btn {
-      min-width: 0;
-      height: 38px;
-      border-radius: 13px;
-      font-size: 12.5px;
-      padding: 0 9px;
-      white-space: nowrap;
+    [data-theme="light"] .quick-capture-bar {
+      background: rgba(245,245,247,0.88);
+      border-top-color: rgba(17,24,39,0.08);
     }
     .quick-capture {
       height: 48px;
-      margin: 10px 0 12px;
       display: grid;
-      grid-template-columns: 36px 1fr 36px;
+      grid-template-columns: 44px 1fr 44px;
       align-items: center;
-      gap: 6px;
-      border-radius: 16px;
+      gap: 4px;
+      border-radius: 14px;
       background: rgba(255,255,255,0.065);
       border: 1px solid rgba(255,255,255,0.075);
       box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
-      padding: 0 6px;
+      padding: 0 4px;
     }
     .quick-capture:focus-within {
       border-color: rgba(10,132,255,0.55);
@@ -1604,17 +1492,81 @@
       font-size: 15px;
     }
     .quick-capture input::placeholder { color: var(--muted); }
-    .quick-plus, .quick-mic {
-      width: 32px;
-      height: 32px;
-      border-radius: 999px;
+    .quick-plus {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       display: grid;
       place-items: center;
       color: var(--accent);
-      background: rgba(10,132,255,0.12);
+      background: rgba(10,132,255,0.14);
+      border: 1px solid rgba(10,132,255,0.22);
     }
-    .quick-mic { color: var(--muted); background: transparent; }
-    .quick-plus svg, .quick-mic svg { width: 17px; height: 17px; stroke-width: 2.4; }
+    .quick-mic {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+    }
+    .quick-plus svg { width: 18px; height: 18px; stroke-width: 2.2; }
+    .quick-mic svg { width: 17px; height: 17px; stroke-width: 2.2; }
+
+    /* ─── Drum roll time picker ──────────────────────────────────────── */
+    .drum-wrap {
+      position: relative;
+      display: flex;
+      gap: 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 12px;
+    }
+    .drum-col {
+      flex: 1;
+      height: 220px;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .drum-col::-webkit-scrollbar { display: none; }
+    .drum-spacer { height: 88px; pointer-events: none; }
+    .drum-item {
+      height: 44px;
+      scroll-snap-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: -0.02em;
+      cursor: pointer;
+      transition: color .15s;
+    }
+    .drum-item.selected { color: var(--text); font-weight: 650; }
+    .drum-selector {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 44px;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.07);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+    .drum-sep {
+      width: 1px;
+      background: rgba(255,255,255,0.07);
+      align-self: stretch;
+      pointer-events: none;
+    }
     .view-pills { grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 10px 0 12px; }
     .vp {
       min-height: 54px;
@@ -1700,12 +1652,6 @@
       border-radius: 999px;
       background: rgba(255,255,255,0.055);
     }
-    .fab {
-      width: 52px;
-      height: 52px;
-      bottom: calc(84px + env(safe-area-inset-bottom));
-      right: 16px;
-    }
     .bottom-nav {
       width: min(420px, calc(100% - 20px));
       left: 50%;
@@ -1730,25 +1676,6 @@
       background: rgba(255,255,255,0.055);
       border-color: rgba(255,255,255,0.07);
     }
-    .quick-date-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .quick-date {
-      height: 36px;
-      border-radius: 13px;
-      background: rgba(255,255,255,0.055);
-      border: 1px solid rgba(255,255,255,0.07);
-      color: var(--text-2);
-      font-size: 13px;
-      font-weight: 650;
-    }
-    .quick-date.active {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
     .chip-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1765,21 +1692,6 @@
       border: 0;
       background: transparent;
       text-align: center;
-    }
-    .smart-suggestions {
-      display: grid;
-      gap: 6px;
-      margin-top: 10px;
-    }
-    .smart-suggestion {
-      min-height: 34px;
-      padding: 8px 10px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.055);
-      color: var(--text-2);
-      font-size: 12.5px;
-      text-align: left;
     }
     .detail-hero {
       display: grid;
@@ -1826,7 +1738,6 @@
     .list-add-row { padding: 0 !important; }
     @media (max-width: 380px) {
       .shell { padding-left: 12px; padding-right: 12px; }
-      .focus-actions { grid-template-columns: 1fr 1fr; }
       .view-pills { gap: 5px; }
       .vp { padding-left: 7px; padding-right: 7px; }
       .vp-num { font-size: 19px; }
@@ -1890,12 +1801,11 @@
       font-size: 14px;
       background: var(--bg-grad);
     }
-    .shell { max-width: 720px; padding-bottom: 96px; }
+    .shell { max-width: 720px; padding-bottom: 160px; }
     .task-card,
     .settings-card,
     .cal-tasks,
     .install-banner,
-    .focus-panel,
     .modal,
     .sheet {
       background: var(--panel);
@@ -1919,18 +1829,15 @@
     .btn,
     .filter-btn,
     .chip,
-    .quick-date,
     .cal-nav-btn,
     .settings-row.tap,
-    .sheet-close,
-    .fab {
+    .sheet-close {
       border-radius: var(--r-md);
       transition: background .12s ease, transform .1s ease, box-shadow .12s ease, opacity .1s ease;
     }
     .btn,
     .filter-btn,
     .cal-nav-btn,
-    .quick-date,
     .chip {
       background: var(--button-bg);
       border: 1px solid var(--border);
@@ -1941,7 +1848,6 @@
     .btn:hover,
     .filter-btn:hover,
     .cal-nav-btn:hover,
-    .quick-date:hover,
     .chip:hover {
       background: var(--button-hover);
       transform: translateY(-1px);
@@ -1950,14 +1856,12 @@
     .btn:active,
     .filter-btn:active,
     .cal-nav-btn:active,
-    .quick-date:active,
     .chip:active {
       transform: translateY(0);
       opacity: .82;
       box-shadow: none;
     }
     .btn.primary,
-    .quick-date.active,
     .chip.active,
     .vp.active {
       background: rgba(96,165,250,.95);
@@ -1967,7 +1871,6 @@
       box-shadow: none;
     }
     [data-theme="light"] .btn.primary,
-    [data-theme="light"] .quick-date.active,
     [data-theme="light"] .chip.active,
     [data-theme="light"] .vp.active {
       background: #007aff;
@@ -1996,7 +1899,7 @@
     .toast {
       left: 50%;
       right: auto;
-      bottom: calc(90px + env(safe-area-inset-bottom));
+      bottom: calc(140px + env(safe-area-inset-bottom));
       transform: translateX(-50%) translateY(10px);
       border-radius: 999px;
       padding: 10px 18px;
@@ -2039,10 +1942,9 @@
       background: rgba(96,165,250,.18);
       border: 1px solid rgba(96,165,250,.38);
     }
-    .fab.is-hidden { display: none; }
 
     /* viewport sizing safety */
-    .sheet-body, .activity-log, .wheel-col { overscroll-behavior: contain; }
+    .sheet-body, .activity-log, .drum-col { overscroll-behavior: contain; }
   </style>
 </head>
 <body>
@@ -2062,18 +1964,6 @@
           <div class="ib-text">On iPhone, tap <strong>Share</strong> → <strong>Add to Home Screen</strong> to enable nudges that actually wake your phone.</div>
         </div>
       </div>
-
-      <div id="focusPanel" class="focus-panel"></div>
-
-      <form id="quickCapture" class="quick-capture" autocomplete="off">
-        <button class="quick-plus" type="submit" aria-label="Add quick task">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-        </button>
-        <input id="quickTitle" type="text" placeholder="Add a task..." aria-label="Add a task" />
-        <button class="quick-mic" type="button" id="quickOpenFull" aria-label="Open full task form">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/></svg>
-        </button>
-      </form>
 
       <div class="view-pills">
         <button class="vp active" data-view="My Day">
@@ -2157,9 +2047,18 @@
     </div>
   </section>
 
-  <button class="fab tappable" id="fabAdd" aria-label="Add task">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-  </button>
+  <!-- ─── Quick Capture Bar ──────────────────────────────────────── -->
+  <div class="quick-capture-bar">
+    <form id="quickCapture" class="quick-capture" autocomplete="off">
+      <button class="quick-plus" type="submit" aria-label="Quick add task">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+      </button>
+      <input id="quickTitle" type="text" placeholder="Quick task…" aria-label="Add a task" />
+      <button class="quick-mic" type="button" id="quickOpenFull" aria-label="Open full task form">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/></svg>
+      </button>
+    </form>
+  </div>
 
   <!-- ─── Bottom Nav ─────────────────────────────────────────────── -->
   <nav class="bottom-nav">
@@ -2203,31 +2102,15 @@
         </button>
       </div>
       <div class="sheet-body">
-        <div class="field">
+        <div class="detail-hero">
           <input id="newTitle" class="input title-large" placeholder="What needs to get done?" autocomplete="off" />
-          <div class="field-hint">e.g. Call Sam tomorrow at 10am</div>
-          <div class="smart-suggestions" id="smartSuggestions"></div>
+          <input id="newNext" class="input" placeholder="Next action — optional" />
         </div>
-        <div class="field">
-          <div class="quick-date-row">
-            <button class="quick-date active" type="button" data-quick-date="today">Today</button>
-            <button class="quick-date" type="button" data-quick-date="tonight">Tonight</button>
-            <button class="quick-date" type="button" data-quick-date="tomorrow">Tomorrow</button>
-          </div>
-        </div>
-        <div class="field">
-          <button class="picker-row tappable" id="newListPicker">
-            <span class="pr-label">List</span>
-            <span class="pr-value" id="newListLabel">General</span>
-          </button>
-        </div>
-        <div class="field">
+        <div class="detail-group">
           <button class="picker-row tappable" id="newDuePicker">
             <span class="pr-label">Due Date</span>
             <span class="pr-value muted" id="newDueLabel">None</span>
           </button>
-        </div>
-        <div class="two-col">
           <button class="picker-row tappable" id="newTimePicker">
             <span class="pr-label">Time</span>
             <span class="pr-value muted" id="newTimeLabel">None</span>
@@ -2236,24 +2119,18 @@
             <span class="pr-label">Remind</span>
             <span class="pr-value muted" id="newReminderLabel">At time</span>
           </button>
-        </div>
-        <div class="field" style="margin-top:14px">
-          <div class="field-label">Priority</div>
-          <div class="chip-row" id="newPriorityChips">
-            <button class="chip" data-pri="Low">Low</button>
-            <button class="chip active" data-pri="Normal">Normal</button>
-            <button class="chip" data-pri="High">High</button>
-          </div>
-        </div>
-        <div class="field">
+          <button class="picker-row tappable" id="newListPicker">
+            <span class="pr-label">List</span>
+            <span class="pr-value" id="newListLabel">General</span>
+          </button>
+          <button class="picker-row tappable" id="newPriorityPicker">
+            <span class="pr-label">Priority</span>
+            <span class="pr-value" id="newPriorityLabel">Normal</span>
+          </button>
           <button class="picker-row tappable" id="newRepeatPicker">
             <span class="pr-label">Repeat</span>
             <span class="pr-value muted" id="newRepeatLabel">No repeat</span>
           </button>
-        </div>
-        <div class="field">
-          <div class="field-label">Next Action <span style="font-weight:500; text-transform:none; letter-spacing:0; color: var(--muted-2);">— optional</span></div>
-          <input id="newNext" class="input" placeholder="The next exact move" />
         </div>
         <div style="height: 8px"></div>
       </div>
@@ -2452,8 +2329,9 @@
       if (n >= 60 && n % 60 === 0) return `${n/60} hours before`;
       return `${n} min before`;
     }
-    function repeatLabel(r) {
-      return ({none:'No repeat', daily:'Every day', weekly:'Every week', monthly:'Every month', weekdays:'Every weekday', monday:'Every Monday', customDays:'Every X days'})[r] || 'No repeat';
+    function repeatLabel(r, every) {
+      if (r === 'customDays') return `Every ${every || 'X'} days`;
+      return ({none:'No repeat', daily:'Every day', weekly:'Every week', monthly:'Every month', weekdays:'Every weekday', monday:'Every Monday'})[r] || 'No repeat';
     }
     function listColor(name) { return normalizeColor(listColors[name]); }
     function listColorKey(name) { return listColor(name); }
@@ -2989,7 +2867,6 @@
     function switchTab(id) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === id));
       document.querySelectorAll('.bnav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === id));
-      document.getElementById('fabAdd').classList.toggle('is-hidden', id === 'settingsTab');
       if (id === 'calendarTab') renderCalendar();
       if (id === 'tasksTab')    renderHero();
       if (id === 'settingsTab') renderSettingsBody(settingsTarget());
@@ -3124,7 +3001,7 @@
         { v: 'High', label: 'High' },
       ], currentValue, onSet);
     }
-    function openRepeatPicker(currentValue, onSet) {
+    function openRepeatPicker(currentRepeat, currentEvery, onSet) {
       const opts = [
         { v: 'none', label: 'No repeat' },
         { v: 'daily', label: 'Every day' },
@@ -3134,7 +3011,40 @@
         { v: 'monthly', label: 'Every month' },
         { v: 'customDays', label: 'Every X days' },
       ];
-      openOptionPicker('Repeat', opts, currentValue, onSet);
+      let selected = currentRepeat || 'none';
+      let customEvery = currentEvery || '7';
+      const body = document.getElementById('pickerBody');
+      const render = () => {
+        body.innerHTML = `
+          <div class="reminder-options">${opts.map(o => `
+            <button class="reminder-option ${selected === o.v ? 'active' : ''}" data-v="${o.v}">
+              <span>${o.label}</span>
+              <span class="check-mark"></span>
+            </button>`).join('')}
+          </div>
+          <div style="margin-top:14px; ${selected === 'customDays' ? '' : 'display:none'}" id="customDaysRow">
+            <div class="field-label">Repeat every how many days?</div>
+            <input id="customDaysInput" class="input" type="number" min="1" max="365" step="1" value="${escapeHtml(customEvery)}" />
+          </div>`;
+        body.querySelectorAll('[data-v]').forEach(b => b.addEventListener('click', () => {
+          selected = b.dataset.v;
+          render();
+        }));
+        if (selected === 'customDays') {
+          const inp = body.querySelector('#customDaysInput');
+          if (inp) inp.addEventListener('input', () => { customEvery = inp.value; });
+        }
+      };
+      document.getElementById('pickerTitle').textContent = 'Repeat';
+      setPickerActions('Set');
+      pickerApply = () => {
+        const every = selected === 'customDays'
+          ? String(Math.max(1, Math.min(365, parseInt(customEvery, 10) || 7)))
+          : '';
+        onSet(selected, every);
+      };
+      render();
+      openSheet('pickerOverlay');
     }
     function openReminderPicker(currentValue, onSet) {
       let val = currentValue;
@@ -3183,36 +3093,103 @@
     }
 
     function openTimePicker(currentValue, onSet) {
-      let hour = 9, minute = 0, meridian = 'AM';
+      const ITEM_H = 44;
+      const hours   = Array.from({ length: 12 }, (_, i) => i + 1);
+      const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+      const periods = ['AM', 'PM'];
+
+      let selHour = 9, selMin = 0, selPeriod = 'AM';
       if (currentValue) {
         const [hh, mm] = currentValue.split(':').map(Number);
-        hour = ((hh + 11) % 12) + 1;
-        minute = mm;
-        meridian = hh >= 12 ? 'PM' : 'AM';
+        selHour   = ((hh + 11) % 12) + 1;
+        selMin    = Math.round(mm / 5) * 5 % 60;
+        selPeriod = hh >= 12 ? 'PM' : 'AM';
       }
-      const hours = Array.from({ length: 12 }, (_, i) => i + 1);
-      const minutes = Array.from({ length: 12 }, (_, i) => i * 5);
+
       const body = document.getElementById('pickerBody');
-      const render = () => {
-        body.innerHTML = `<div class="wheel-grid">
-          <div class="wheel-col">${hours.map(h => `<button class="wheel-opt ${h===hour?'active':''}" data-h="${h}">${String(h).padStart(2,'0')}</button>`).join('')}</div>
-          <div class="wheel-col">${minutes.map(m => `<button class="wheel-opt ${m===minute?'active':''}" data-m="${m}">${String(m).padStart(2,'0')}</button>`).join('')}</div>
-          <div class="wheel-col">${['AM','PM'].map(p => `<button class="wheel-opt ${p===meridian?'active':''}" data-p="${p}">${p}</button>`).join('')}</div>
+      body.innerHTML = `
+        <div class="drum-wrap">
+          <div class="drum-selector"></div>
+          <div class="drum-col" id="dc-hour">
+            <div class="drum-spacer"></div>
+            ${hours.map(h => `<div class="drum-item" data-h="${h}">${String(h).padStart(2,'0')}</div>`).join('')}
+            <div class="drum-spacer"></div>
+          </div>
+          <div class="drum-sep"></div>
+          <div class="drum-col" id="dc-min">
+            <div class="drum-spacer"></div>
+            ${minutes.map(m => `<div class="drum-item" data-m="${m}">${String(m).padStart(2,'0')}</div>`).join('')}
+            <div class="drum-spacer"></div>
+          </div>
+          <div class="drum-sep"></div>
+          <div class="drum-col" id="dc-period">
+            <div class="drum-spacer"></div>
+            ${periods.map(p => `<div class="drum-item" data-p="${p}">${p}</div>`).join('')}
+            <div class="drum-spacer"></div>
+          </div>
         </div>
         <button class="picker-clear" id="clearTimeBtn">Clear time</button>`;
-        body.querySelectorAll('[data-h]').forEach(b => b.addEventListener('click', () => { hour = Number(b.dataset.h); vibrate(8); render(); }));
-        body.querySelectorAll('[data-m]').forEach(b => b.addEventListener('click', () => { minute = Number(b.dataset.m); vibrate(8); render(); }));
-        body.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => { meridian = b.dataset.p; vibrate(8); render(); }));
-        body.querySelector('#clearTimeBtn').addEventListener('click', () => { onSet(''); closeSheet('pickerOverlay'); });
+
+      const markSelected = (col, attr, val) => {
+        col.querySelectorAll('.drum-item').forEach(el => {
+          const match = attr === 'h' ? Number(el.dataset.h) === val
+                      : attr === 'm' ? Number(el.dataset.m) === val
+                      : el.dataset.p === val;
+          el.classList.toggle('selected', match);
+        });
       };
+
+      const scrollTo = (col, idx) => {
+        col.scrollTop = idx * ITEM_H;
+      };
+
+      const readScroll = (col, items) => {
+        const idx = Math.round(col.scrollTop / ITEM_H);
+        return Math.max(0, Math.min(items.length - 1, idx));
+      };
+
+      let scrollTimer;
+      const bindScroll = (col, items, onPick) => {
+        col.addEventListener('scroll', () => {
+          clearTimeout(scrollTimer);
+          scrollTimer = setTimeout(() => {
+            const idx = readScroll(col, items);
+            col.scrollTop = idx * ITEM_H;
+            onPick(items[idx]);
+            vibrate(6);
+          }, 80);
+        }, { passive: true });
+      };
+
       document.getElementById('pickerTitle').textContent = 'Time';
       setPickerActions('Set Time');
+
+      requestAnimationFrame(() => {
+        const hCol = body.querySelector('#dc-hour');
+        const mCol = body.querySelector('#dc-min');
+        const pCol = body.querySelector('#dc-period');
+
+        scrollTo(hCol, hours.indexOf(selHour));
+        scrollTo(mCol, minutes.indexOf(selMin) === -1 ? 0 : minutes.indexOf(selMin));
+        scrollTo(pCol, periods.indexOf(selPeriod));
+
+        markSelected(hCol, 'h', selHour);
+        markSelected(mCol, 'm', selMin);
+        markSelected(pCol, 'p', selPeriod);
+
+        bindScroll(hCol, hours, v   => { selHour   = v; markSelected(hCol, 'h', v); });
+        bindScroll(mCol, minutes, v => { selMin    = v; markSelected(mCol, 'm', v); });
+        bindScroll(pCol, periods, v => { selPeriod = v; markSelected(pCol, 'p', v); });
+      });
+
+      body.querySelector('#clearTimeBtn').addEventListener('click', () => { onSet(''); closeSheet('pickerOverlay'); });
+
       pickerApply = () => {
-        let h = hour % 12;
-        if (meridian === 'PM') h += 12;
-        onSet(`${String(h).padStart(2,'0')}:${String(minute).padStart(2,'0')}`);
+        let h = selHour % 12;
+        if (selPeriod === 'PM') h += 12;
+        onSet(`${String(h).padStart(2,'0')}:${String(selMin).padStart(2,'0')}`);
       };
-      render();
+
       openSheet('pickerOverlay');
     }
 
@@ -3340,8 +3317,6 @@
       };
       document.getElementById('newTitle').value = '';
       document.getElementById('newNext').value = '';
-      document.querySelectorAll('[data-quick-date]').forEach(b => b.classList.toggle('active', b.dataset.quickDate === 'today'));
-      renderSmartSuggestions();
       syncAddSheetLabels();
     }
 
@@ -3356,12 +3331,11 @@
       const rl = document.getElementById('newReminderLabel');
       rl.textContent = reminderValueLabel(addState.reminderLeadMinutes);
       rl.classList.toggle('muted', false);
-      document.querySelectorAll('#newPriorityChips .chip').forEach(c => c.classList.toggle('active', c.dataset.pri === addState.priority));
-      document.getElementById('newRepeatLabel').textContent = repeatLabel(addState.repeat);
+      document.getElementById('newPriorityLabel').textContent = addState.priority;
+      document.getElementById('newRepeatLabel').textContent = repeatLabel(addState.repeat, addState.repeatEvery);
       document.getElementById('newRepeatLabel').classList.toggle('muted', addState.repeat === 'none');
     }
 
-    document.getElementById('newListPicker').addEventListener('click', () => openListPicker(addState.list, v => { addState.list = v; syncAddSheetLabels(); }));
     document.getElementById('newDuePicker').addEventListener('click', () => openDatePicker(addState.dueDate, v => { addState.dueDate = v; syncAddSheetLabels(); }));
     document.getElementById('newTimePicker').addEventListener('click', () => openTimePicker(addState.reminderTime, v => {
       if (v && !addState.dueDate) addState.dueDate = todayStr();
@@ -3369,8 +3343,9 @@
       syncAddSheetLabels();
     }));
     document.getElementById('newReminderPicker').addEventListener('click', () => openReminderPicker(addState.reminderLeadMinutes, v => { addState.reminderLeadMinutes = v; syncAddSheetLabels(); }));
-    document.getElementById('newRepeatPicker').addEventListener('click', () => openRepeatPicker(addState.repeat, v => { addState.repeat = v; syncAddSheetLabels(); }));
-    document.querySelectorAll('#newPriorityChips .chip').forEach(c => c.addEventListener('click', () => { addState.priority = c.dataset.pri; syncAddSheetLabels(); vibrate(10); }));
+    document.getElementById('newListPicker').addEventListener('click', () => openListPicker(addState.list, v => { addState.list = v; syncAddSheetLabels(); }));
+    document.getElementById('newPriorityPicker').addEventListener('click', () => openPriorityPicker(addState.priority, v => { addState.priority = v; syncAddSheetLabels(); vibrate(10); }));
+    document.getElementById('newRepeatPicker').addEventListener('click', () => openRepeatPicker(addState.repeat, addState.repeatEvery, (v, every) => { addState.repeat = v; addState.repeatEvery = every || ''; syncAddSheetLabels(); }));
 
     document.getElementById('newSaveBtn').addEventListener('click', () => {
       addState.title = cleanText(document.getElementById('newTitle').value);
@@ -3384,6 +3359,7 @@
         reminderLeadMinutes: addState.reminderTime ? addState.reminderLeadMinutes : '',
         priority: addState.priority,
         repeat: addState.repeat,
+        repeatEvery: addState.repeatEvery,
       });
       if (t) {
         closeSheet('addSheetOverlay');
@@ -3391,11 +3367,6 @@
       }
     });
     document.getElementById('newTitle').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('newSaveBtn').click(); });
-    document.getElementById('fabAdd').addEventListener('click', () => {
-      resetAddState();
-      openSheet('addSheetOverlay');
-      setTimeout(() => document.getElementById('newTitle').focus(), 240);
-    });
 
     /* ─── Task Detail Sheet ─────────────────────────────────────────── */
     function openTaskDetail(id) {
@@ -3439,7 +3410,7 @@
           </button>
           <button class="picker-row tappable" id="dRepeatPicker">
             <span class="pr-label">Repeat</span>
-            <span class="pr-value ${t.repeat==='none' ? 'muted' : ''}" id="dRepeatLabel">${escapeHtml(repeatLabel(t.repeat))}</span>
+            <span class="pr-value ${t.repeat==='none' ? 'muted' : ''}" id="dRepeatLabel">${escapeHtml(repeatLabel(t.repeat, t.repeatEvery))}</span>
           </button>
           <button class="picker-row tappable" id="dPinBtn">
             <span class="pr-label">Pin</span>
@@ -3511,8 +3482,8 @@
         updateTask(t.id, { priority: v });
         openTaskDetail(t.id);
       }));
-      $('dRepeatPicker').addEventListener('click', () => openRepeatPicker(t.repeat, v => {
-        updateTask(t.id, { repeat: v });
+      $('dRepeatPicker').addEventListener('click', () => openRepeatPicker(t.repeat, t.repeatEvery, (v, every) => {
+        updateTask(t.id, { repeat: v, repeatEvery: every || '' });
         openTaskDetail(t.id);
       }));
       $('dPinBtn').addEventListener('click', () => {
@@ -3902,8 +3873,14 @@
       // Notifications
       target.querySelector('#enablePushBtn').addEventListener('click', enablePushNotifications);
       target.querySelector('#testPushBtn').addEventListener('click', async () => {
-        const r = await api('/api/push/test', { method: 'POST' });
+        let body = {};
+        try {
+          const stored = localStorage.getItem('pushSubscription');
+          if (stored) body = { subscription: JSON.parse(stored) };
+        } catch {}
+        const r = await api('/api/push/test', { method: 'POST', body: JSON.stringify(body) });
         if (r && r.ok && r.sent > 0) showToast('Test sent to ' + r.sent + ' device(s)');
+        else if (r && r.error === 'subscription_expired') showToast('Subscription expired — re-enable push');
         else showToast('No subscribers — enable push first');
       });
       target.querySelector('#setRemEnabled').addEventListener('change', e => {
@@ -4155,10 +4132,9 @@
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(vapid.publicKey),
         });
-        await api('/api/push/subscribe', {
-          method: 'POST',
-          body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey('p256dh')), auth: arrayBufferToBase64(sub.getKey('auth')) } }),
-        });
+        const subObj = { endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey('p256dh')), auth: arrayBufferToBase64(sub.getKey('auth')) } };
+        await api('/api/push/subscribe', { method: 'POST', body: JSON.stringify(subObj) });
+        try { localStorage.setItem('pushSubscription', JSON.stringify(subObj)); } catch {}
         setPushStatus('Active on this device', 'green');
         btn.style.display = 'none';
         showToast('Notifications enabled');
@@ -4222,60 +4198,6 @@
     });
 
     /* ─── Render all ─────────────────────────────────────────────────── */
-    /* Premium Today dashboard helpers */
-    function getFocusTask() {
-      const open = tasks.filter(t => !isDone(t));
-      if (!open.length) return null;
-      return [...open].sort((a, b) => smartScore(a) - smartScore(b))[0];
-    }
-
-    function renderFocusPanel() {
-      const panel = document.getElementById('focusPanel');
-      if (!panel) return;
-      const t = getFocusTask();
-      if (!t || currentView === 'Completed') {
-        panel.className = 'focus-panel empty';
-        panel.innerHTML = '';
-        return;
-      }
-      const when = dueLine(t).replace('task-due', 'focus-meta').replace(/<strong[^>]*>|<\/strong>/g, '');
-      panel.className = 'focus-panel';
-      panel.innerHTML = `
-        <div class="focus-card" data-focus-id="${escapeHtml(t.id)}">
-          <div class="focus-label"><span class="focus-dot">✓</span> Focus Now</div>
-          <h2 class="focus-title">${escapeHtml(t.title)}</h2>
-          ${when || '<div class="focus-meta">No due time set</div>'}
-          <div class="focus-next"><span>Next action</span>${escapeHtml(t.nextAction || 'Choose the smallest next move.')}</div>
-          <div class="focus-actions">
-            <button class="btn green" data-focus-done="${escapeHtml(t.id)}">Done</button>
-            <button class="btn ghost" data-focus-remind="${escapeHtml(t.id)}">Remind</button>
-            <button class="btn ghost" data-focus-snooze="${escapeHtml(t.id)}">Snooze</button>
-            <button class="btn primary" data-focus-start="${escapeHtml(t.id)}">Start Focus</button>
-          </div>
-        </div>
-      `;
-      panel.querySelector('[data-focus-done]').addEventListener('click', e => {
-        e.stopPropagation();
-        completeTask(e.currentTarget.dataset.focusDone);
-      });
-      panel.querySelector('[data-focus-remind]').addEventListener('click', e => {
-        e.stopPropagation();
-        openTaskDetail(e.currentTarget.dataset.focusRemind);
-      });
-      panel.querySelector('[data-focus-snooze]').addEventListener('click', e => {
-        e.stopPropagation();
-        updateTask(e.currentTarget.dataset.focusSnooze, { dueDate: addDaysIso(1), pinnedToday: false });
-        showToast('Snoozed until tomorrow');
-      });
-      panel.querySelector('[data-focus-start]').addEventListener('click', e => {
-        e.stopPropagation();
-        selectedTaskId = e.currentTarget.dataset.focusStart;
-        showToast('Focus started');
-        openTaskDetail(selectedTaskId);
-      });
-      panel.querySelector('.focus-card').addEventListener('click', () => openTaskDetail(t.id));
-    }
-
     function renderHero() {
       const hour = new Date().getHours();
       const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -4301,7 +4223,6 @@
       document.getElementById('heroKicker').textContent = `${greeting}${userName ? `, ${userName}` : ''}`;
       document.getElementById('heroTitle').textContent = currentView === 'My Day' ? 'Today' : currentView;
       document.getElementById('heroSub').textContent = sub;
-      renderFocusPanel();
     }
 
     function renderViewPills() {
@@ -4319,21 +4240,6 @@
       d.setHours(0,0,0,0);
       d.setDate(d.getDate() + days);
       return d.toISOString().slice(0,10);
-    }
-
-    function applyQuickDate(kind) {
-      document.querySelectorAll('[data-quick-date]').forEach(b => b.classList.toggle('active', b.dataset.quickDate === kind));
-      if (kind === 'today') {
-        addState.dueDate = todayStr();
-        addState.reminderTime = '';
-      } else if (kind === 'tonight') {
-        addState.dueDate = todayStr();
-        addState.reminderTime = '18:00';
-      } else if (kind === 'tomorrow') {
-        addState.dueDate = addDaysIso(1);
-        addState.reminderTime = '';
-      }
-      syncAddSheetLabels();
     }
 
     function quickPayloadFromText(raw) {
@@ -4364,20 +4270,6 @@
       return payload;
     }
 
-    function renderSmartSuggestions() {
-      const el = document.getElementById('smartSuggestions');
-      const input = document.getElementById('newTitle');
-      if (!el || !input) return;
-      const text = cleanText(input.value);
-      const suggestions = [
-        { label: 'Set for today', date: 'today' },
-        { label: 'Tonight at 6:00 PM', date: 'tonight' },
-        { label: 'Tomorrow', date: 'tomorrow' },
-      ];
-      el.innerHTML = suggestions.map(s => `<button type="button" class="smart-suggestion" data-suggestion="${s.date}">${escapeHtml(text ? `${s.label}: ${text}` : s.label)}</button>`).join('');
-      el.querySelectorAll('[data-suggestion]').forEach(b => b.addEventListener('click', () => applyQuickDate(b.dataset.suggestion)));
-    }
-
     document.getElementById('quickCapture').addEventListener('submit', e => {
       e.preventDefault();
       const input = document.getElementById('quickTitle');
@@ -4389,12 +4281,10 @@
     document.getElementById('quickOpenFull').addEventListener('click', () => {
       resetAddState();
       document.getElementById('newTitle').value = document.getElementById('quickTitle').value;
-      renderSmartSuggestions();
+      document.getElementById('quickTitle').value = '';
       openSheet('addSheetOverlay');
       setTimeout(() => document.getElementById('newTitle').focus(), 240);
     });
-    document.querySelectorAll('[data-quick-date]').forEach(b => b.addEventListener('click', () => applyQuickDate(b.dataset.quickDate)));
-    document.getElementById('newTitle').addEventListener('input', renderSmartSuggestions);
 
     function renderAll() {
       tasks = tasks.map(migrateTask); // safety pass
