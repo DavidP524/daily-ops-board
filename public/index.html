@@ -1693,6 +1693,27 @@
       background: transparent;
       text-align: center;
     }
+    /* ─── Add Task expand sections (notes / checklist) ──────────────── */
+    .add-extra-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px 2px;
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+      background: transparent;
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .add-extra-btn svg { width: 17px; height: 17px; stroke-width: 2.3; flex-shrink: 0; }
+    .add-extra-btn.open { color: var(--text-2); }
+    .new-extra-body {
+      display: none;
+      padding-bottom: 6px;
+    }
+    .new-extra-body.open { display: block; }
     .detail-hero {
       display: grid;
       gap: 9px;
@@ -2132,6 +2153,29 @@
             <span class="pr-value muted" id="newRepeatLabel">No repeat</span>
           </button>
         </div>
+
+        <!-- Notes expand -->
+        <button class="add-extra-btn tappable" id="newNotesToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <span id="newNotesLabel">Add notes</span>
+        </button>
+        <div class="new-extra-body" id="newNotesBody">
+          <textarea id="newNotes" class="input" placeholder="Context, links, notes…" rows="3" style="resize:none; margin-bottom:4px;"></textarea>
+        </div>
+
+        <!-- Checklist expand -->
+        <button class="add-extra-btn tappable" id="newChecklistToggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          <span id="newChecklistLabel">Add checklist</span>
+        </button>
+        <div class="new-extra-body" id="newChecklistBody">
+          <div class="check-add" style="margin-bottom:6px;">
+            <input id="newStepInput" class="input" placeholder="Add a step…" style="height:44px;" />
+            <button class="btn primary small" id="newAddStepBtn" style="height:44px;">Add</button>
+          </div>
+          <div class="check-list" id="newCheckList"></div>
+        </div>
+
         <div style="height: 8px"></div>
       </div>
       <div class="sheet-actions">
@@ -2831,9 +2875,7 @@
             setTimeout(() => completeTask(id), 220);
           } else if (dx < -80) {
             card.style.transform = 'translateX(-110%)';
-            const ok = await showConfirm('Delete task?', 'This cannot be undone.', 'Delete');
-            if (ok) deleteTask(id);
-            else card.style.transform = 'translateX(0)';
+            setTimeout(() => deleteTask(id), 220);
           } else {
             card.style.transform = 'translateX(0)';
           }
@@ -3301,7 +3343,33 @@
       repeat: 'none',
       repeatEvery: '',
       nextAction: '',
+      notes: '',
+      checklist: [],
     };
+
+    function renderNewChecklist() {
+      const el = document.getElementById('newCheckList');
+      if (!el) return;
+      el.innerHTML = addState.checklist.map((c, i) => `
+        <div class="check-item" data-cidx="${i}">
+          <button class="check-box" data-ntoggle="${i}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </button>
+          <div class="ct">${escapeHtml(c.text || '')}</div>
+          <button class="cd-btn" data-ndelstep="${i}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>`).join('');
+      el.querySelectorAll('[data-ntoggle]').forEach(b => b.addEventListener('click', () => {
+        const idx = Number(b.dataset.ntoggle);
+        addState.checklist[idx].done = !addState.checklist[idx].done;
+        renderNewChecklist();
+      }));
+      el.querySelectorAll('[data-ndelstep]').forEach(b => b.addEventListener('click', () => {
+        addState.checklist.splice(Number(b.dataset.ndelstep), 1);
+        renderNewChecklist();
+      }));
+    }
 
     function resetAddState() {
       addState = {
@@ -3314,9 +3382,24 @@
         repeat: 'none',
         repeatEvery: '',
         nextAction: '',
+        notes: '',
+        checklist: [],
       };
       document.getElementById('newTitle').value = '';
       document.getElementById('newNext').value = '';
+      // Collapse notes
+      document.getElementById('newNotesBody').classList.remove('open');
+      document.getElementById('newNotesToggle').classList.remove('open');
+      document.getElementById('newNotesLabel').textContent = 'Add notes';
+      document.getElementById('newNotesToggle').querySelector('svg').style.display = '';
+      document.getElementById('newNotes').value = '';
+      // Collapse checklist
+      document.getElementById('newChecklistBody').classList.remove('open');
+      document.getElementById('newChecklistToggle').classList.remove('open');
+      document.getElementById('newChecklistLabel').textContent = 'Add checklist';
+      document.getElementById('newChecklistToggle').querySelector('svg').style.display = '';
+      document.getElementById('newStepInput').value = '';
+      renderNewChecklist();
       syncAddSheetLabels();
     }
 
@@ -3350,6 +3433,7 @@
     document.getElementById('newSaveBtn').addEventListener('click', () => {
       addState.title = cleanText(document.getElementById('newTitle').value);
       addState.nextAction = cleanText(document.getElementById('newNext').value);
+      addState.notes = document.getElementById('newNotes').value.trim();
       const t = addTask({
         title: addState.title,
         nextAction: addState.nextAction,
@@ -3360,6 +3444,8 @@
         priority: addState.priority,
         repeat: addState.repeat,
         repeatEvery: addState.repeatEvery,
+        notes: addState.notes,
+        checklist: JSON.stringify(addState.checklist),
       });
       if (t) {
         closeSheet('addSheetOverlay');
@@ -3367,6 +3453,45 @@
       }
     });
     document.getElementById('newTitle').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('newSaveBtn').click(); });
+
+    // Notes expand/collapse
+    document.getElementById('newNotesToggle').addEventListener('click', () => {
+      const body = document.getElementById('newNotesBody');
+      const btn = document.getElementById('newNotesToggle');
+      const label = document.getElementById('newNotesLabel');
+      const icon = btn.querySelector('svg');
+      const open = body.classList.toggle('open');
+      btn.classList.toggle('open', open);
+      label.textContent = open ? 'Notes' : 'Add notes';
+      icon.style.display = open ? 'none' : '';
+      if (open) setTimeout(() => document.getElementById('newNotes').focus(), 60);
+    });
+
+    // Checklist expand/collapse
+    document.getElementById('newChecklistToggle').addEventListener('click', () => {
+      const body = document.getElementById('newChecklistBody');
+      const btn = document.getElementById('newChecklistToggle');
+      const label = document.getElementById('newChecklistLabel');
+      const icon = btn.querySelector('svg');
+      const open = body.classList.toggle('open');
+      btn.classList.toggle('open', open);
+      label.textContent = open ? 'Checklist' : 'Add checklist';
+      icon.style.display = open ? 'none' : '';
+      if (open) setTimeout(() => document.getElementById('newStepInput').focus(), 60);
+    });
+
+    // Checklist add step
+    function addNewStep() {
+      const inp = document.getElementById('newStepInput');
+      const text = (inp.value || '').trim();
+      if (!text) return;
+      addState.checklist.push({ text, done: false });
+      inp.value = '';
+      renderNewChecklist();
+      vibrate(8);
+    }
+    document.getElementById('newAddStepBtn').addEventListener('click', addNewStep);
+    document.getElementById('newStepInput').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addNewStep(); } });
 
     /* ─── Task Detail Sheet ─────────────────────────────────────────── */
     function openTaskDetail(id) {
