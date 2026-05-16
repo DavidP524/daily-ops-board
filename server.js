@@ -11,33 +11,35 @@ const { DatabaseSync: Database } = require('node:sqlite');
 const cron = require('node-cron');
 
 // ---------------------------------------------------------------------------
-// Upstash Redis — persistent KV store for cron-critical data across instances
-// Uses plain fetch (no SDK). Gracefully no-ops when env vars not set.
+// Vercel Blob — persistent storage for cron-critical data across instances.
+// Gracefully no-ops when BLOB_READ_WRITE_TOKEN is not set.
 // ---------------------------------------------------------------------------
-const UPSTASH_URL   = process.env.UPSTASH_REDIS_REST_URL;
-const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+const { put: blobPut, list: blobList } = require('@vercel/blob');
 
 async function kvSet(key, value) {
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) return;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return;
   try {
-    await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(typeof value === 'string' ? value : JSON.stringify(value)),
+    const data = typeof value === 'string' ? value : JSON.stringify(value);
+    await blobPut(`playbook/${key}`, data, {
+      access: 'public',
+      addRandomSuffix: false,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
-  } catch (e) { console.error('[KV] set error:', e.message); }
+  } catch (e) { console.error('[Blob] set error:', e.message); }
 }
 
 async function kvGet(key) {
-  if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return null;
   try {
-    const res = await fetch(`${UPSTASH_URL}/get/${encodeURIComponent(key)}`, {
-      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+    const { blobs } = await blobList({
+      prefix: `playbook/${key}`,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
-    const { result } = await res.json();
-    if (!result) return null;
-    try { return JSON.parse(result); } catch { return result; }
-  } catch (e) { console.error('[KV] get error:', e.message); return null; }
+    if (!blobs.length) return null;
+    const res = await fetch(blobs[0].url);
+    const text = await res.text();
+    try { return JSON.parse(text); } catch { return text; }
+  } catch (e) { console.error('[Blob] get error:', e.message); return null; }
 }
 
 // ---------------------------------------------------------------------------
