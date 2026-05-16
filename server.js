@@ -520,90 +520,107 @@ app.post('/api/push/ack', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Cron — every minute: trigger reminders + re-fire nudges until acked
+// Cron nudge logic — shared by HTTP endpoint (Vercel) and in-process fallback
 // ---------------------------------------------------------------------------
-cron.schedule('* * * * *', async () => {
-  try {
-    const settings = getSettings();
-    if (settings.reminders_enabled !== 'true') return;
-    const now = new Date();
-    if (isInQuietHours(settings, now)) return;
+async function runNudge() {
+  const settings = getSettings();
+  if (settings.reminders_enabled !== 'true') return 0;
+  const now = new Date();
+  if (isInQuietHours(settings, now)) return 0;
 
-    const nudgeIntervalMs = (parseInt(settings.nudge_interval_minutes || '5', 10)) * 60 * 1000;
-    const maxNudges = parseInt(settings.max_nudges || '6', 10);
-    const defaultLead = parseInt(settings.reminder_lead_minutes || '0', 10);
+  const nudgeIntervalMs = (parseInt(settings.nudge_interval_minutes || '5', 10)) * 60 * 1000;
+  const maxNudges = parseInt(settings.max_nudges || '6', 10);
+  const defaultLead = parseInt(settings.reminder_lead_minutes || '0', 10);
 
-    const tasks = db.prepare(`
-      SELECT * FROM tasks
-      WHERE status != 'Completed'
-        AND reminderTime != ''
-        AND dueDate != ''
-    `).all();
+  const tasks = db.prepare(`
+    SELECT * FROM tasks
+    WHERE status != 'Completed'
+      AND reminderTime != ''
+      AND dueDate != ''
+  `).all();
 
-    for (const task of tasks) {
-      const lead = parseInt(task.reminderLeadMinutes || String(defaultLead), 10);
-      const dueEpoch = new Date(task.dueDate + 'T' + task.reminderTime + ':00').getTime();
-      const fireEpoch = dueEpoch - lead * 60 * 1000;
+  let fired = 0;
+  for (const task of tasks) {
+    const lead = parseInt(task.reminderLeadMinutes || String(defaultLead), 10);
+    const dueEpoch = new Date(task.dueDate + 'T' + task.reminderTime + ':00').getTime();
+    const fireEpoch = dueEpoch - lead * 60 * 1000;
 
-      // Skip if not due to fire yet
-      if (now.getTime() < fireEpoch) continue;
+    if (now.getTime() < fireEpoch) continue;
 
-      // Skip snoozed
-      if (task.snoozeUntil) {
-        const snoozeEpoch = new Date(task.snoozeUntil).getTime();
-        if (now.getTime() < snoozeEpoch) continue;
-      }
-
-      // Determine if we should fire
-      let shouldFire = false;
-      let isFirstFire = false;
-      const lastNudgedEpoch = task.lastNudgedAt ? new Date(task.lastNudgedAt).getTime() : 0;
-
-      if (!lastNudgedEpoch) {
-        shouldFire = true;
-        isFirstFire = true;
-      } else {
-        if (task.nudgeCount >= maxNudges) continue;
-        if (now.getTime() - lastNudgedEpoch >= nudgeIntervalMs - 1000) {
-          shouldFire = true;
-        }
-      }
-
-      // Don't fire if more than 6 hours past due (avoid surprises)
-      if (now.getTime() - dueEpoch > 6 * 60 * 60 * 1000) continue;
-
-      if (!shouldFire) continue;
-
-      const titlePrefix = isFirstFire ? '' : `Reminder ${task.nudgeCount + 1}: `;
-      const bodyParts = [];
-      if (task.reminderTime) bodyParts.push(`Due at ${formatTime12(task.reminderTime)}`);
-      if (task.nextAction) bodyParts.push(task.nextAction);
-      const body = bodyParts.join(' — ') || 'Tap to view';
-
-      await sendPush({
-        title: `${titlePrefix}${task.title}`,
-        body,
-        icon: '/icons/icon-192.png',
-        badge: '/icons/icon-192.png',
-        tag: `task-${task.id}`,
-        renotify: true,
-        requireInteraction: true,
-        actions: [
-          { action: 'done', title: 'Done' },
-          { action: 'snooze5', title: 'Snooze 5m' },
-        ],
-        data: { taskId: task.id, url: '/' },
-      });
-
-      db.prepare(`
-        UPDATE tasks SET lastNudgedAt = ?, nudgeCount = nudgeCount + 1, snoozeUntil = ''
-        WHERE id = ?
-      `).run(now.toISOString(), task.id);
+    if (task.snoozeUntil) {
+      if (now.getTime() < new Date(task.snoozeUntil).getTime()) continue;
     }
+
+    let shouldFire = false;
+    let isFirstFire = false;
+    const lastNudgedEpoch = task.lastNudgedAt ? new Date(task.lastNudgedAt).getTime() : 0;
+
+    if (!lastNudgedEpoch) {
+      shouldFire = true;
+      isFirstFire = true;
+    } else {
+      if (task.nudgeCount >= maxNudges) continue;
+      if (now.getTime() - lastNudgedEpoch >= nudgeIntervalMs - 1000) shouldFire = true;
+    }
+
+    if (now.getTime() - dueEpoch > 6 * 60 * 60 * 1000) continue;
+    if (!shouldFire) continue;
+
+    const titlePrefix = isFirstFire ? '' : `Reminder ${task.nudgeCount + 1}: `;
+    const bodyParts = [];
+    if (task.reminderTime) bodyParts.push(`Due at ${formatTime12(task.reminderTime)}`);
+    if (task.nextAction) bodyParts.push(task.nextAction);
+    const body = bodyParts.join(' — ') || 'Tap to view';
+
+    await sendPush({
+      title: `${titlePrefix}${task.title}`,
+      body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: `task-${task.id}`,
+      renotify: true,
+      requireInteraction: true,
+      actions: [
+        { action: 'done', title: 'Done' },
+        { action: 'snooze5', title: 'Snooze 5m' },
+      ],
+      data: { taskId: task.id, url: '/' },
+    });
+
+    db.prepare(`
+      UPDATE tasks SET lastNudgedAt = ?, nudgeCount = nudgeCount + 1, snoozeUntil = ''
+      WHERE id = ?
+    `).run(now.toISOString(), task.id);
+
+    fired++;
+  }
+  return fired;
+}
+
+// HTTP cron endpoint — called by Vercel's native cron scheduler every minute.
+// Vercel sends: Authorization: Bearer <CRON_SECRET>
+// Local dev: no auth required (CRON_SECRET not set).
+app.post('/api/cron/nudge', async (req, res) => {
+  const secret = process.env.CRON_SECRET;
+  if (secret) {
+    const auth = req.headers['authorization'];
+    if (auth !== `Bearer ${secret}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+  try {
+    const fired = await runNudge();
+    res.json({ ok: true, fired });
   } catch (err) {
-    console.error('[Cron] Error:', err.message);
+    console.error('[Cron/nudge] Error:', err.message);
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
+
+// In-process fallback for local development (won't fire on Vercel).
+if (process.env.NODE_ENV !== 'production') {
+  cron.schedule('* * * * *', () => runNudge().catch(e => console.error('[Cron]', e.message)));
+}
 
 function formatTime12(hhmm) {
   const [h, m] = hhmm.split(':').map(Number);
