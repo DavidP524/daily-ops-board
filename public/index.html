@@ -270,7 +270,9 @@
       position: relative;
       border-radius: var(--r-lg);
       overflow: hidden;
+      border-left: 3px solid var(--list-color, transparent);
     }
+    .task-card-wrap.attention { border-left-color: var(--red); }
     .swipe-underlay {
       position: absolute;
       inset: 0;
@@ -309,20 +311,9 @@
       box-shadow: 0 1px 2px rgba(15,23,42,0.05), 0 4px 12px rgba(15,23,42,0.04);
     }
     .task-card:active { transform: scale(0.98); }
-    .task-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 14px;
-      bottom: 14px;
-      width: 3px;
-      border-radius: 0 3px 3px 0;
-      background: var(--list-color, transparent);
-    }
     .task-card.selected { background: var(--surface-3); border-color: var(--accent); }
     .task-card.done { opacity: 0.5; }
     .task-card.done .task-title { text-decoration: line-through; text-decoration-color: var(--muted); }
-    .task-card.attention::before { background: var(--red); }
     .task-title {
       font-size: 16px;
       font-weight: 600;
@@ -924,39 +915,35 @@
       border-color: var(--text);
       transform: scale(1.12);
     }
-    /* Custom color swatch: real native colour input styled to look like
-       a rainbow swatch. Tapping it fires the iOS colour wheel directly,
-       since the gesture lands on the input — no programmatic .click(). */
-    .color-popover .cc-custom {
+    /* Custom color swatch: the WRAP is the visible circle; the native
+       input is an invisible overlay so tapping it fires the color wheel. */
+    .color-popover .cc-custom-wrap {
+      position: relative;
       width: 100%;
       aspect-ratio: 1;
       border-radius: 999px;
       border: 2px solid transparent;
-      padding: 0;
-      cursor: pointer;
-      position: relative;
       background: conic-gradient(from 0deg, #ff453a, #ff9f0a, #ffd60a, #30d158, #0a84ff, #5e5ce6, #bf5af2, #ff2d55, #ff453a);
       box-shadow: 0 1px 3px rgba(0,0,0,0.18);
-      -webkit-appearance: none;
-      appearance: none;
       transition: transform .14s var(--ease), border-color .14s;
       overflow: hidden;
+      cursor: pointer;
     }
-    .color-popover .cc-custom::-webkit-color-swatch-wrapper {
-      padding: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-    .color-popover .cc-custom::-webkit-color-swatch {
-      border: 0;
-      border-radius: 999px;
-      opacity: 0;
-    }
-    .color-popover .cc-custom::-moz-color-swatch { border: 0; opacity: 0; border-radius: 999px; }
-    .color-popover .cc-custom.active {
+    .color-popover .cc-custom-wrap.active {
       border-color: var(--text);
       transform: scale(1.12);
+    }
+    .color-popover .cc-custom {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      border: 0;
+      padding: 0;
     }
     .color-popover .cc-custom-mark {
       pointer-events: none;
@@ -973,11 +960,6 @@
       font-weight: 300;
       text-shadow: 0 1px 2px rgba(0,0,0,0.45);
       line-height: 1;
-    }
-    .color-popover .cc-custom-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1;
     }
 
     /* ─── Activity log ────────────────────────────────────────────────── */
@@ -1625,7 +1607,7 @@
       border: 1.5px solid var(--border-2);
       background: rgba(255,255,255,0.025);
     }
-    .task-card.attention .task-check { border-color: rgba(255,69,58,0.6); }
+    .task-card-wrap.attention .task-check { border-color: rgba(255,69,58,0.6); }
     .task-card .complete-btn {
       left: 12px;
       right: auto;
@@ -2267,17 +2249,14 @@
       '#8e8e93', // gray
       '#ff453a', // red
       '#ff9500', // orange
-      '#ffcc00', // yellow
+      '#ffd60a', // yellow
       '#30d158', // green
-      '#5ac8fa', // teal
+      '#5ac8fa', // light blue
       '#0a84ff', // blue
       '#5e5ce6', // indigo
       '#bf5af2', // purple
       '#ff2d55', // pink
       '#a2845e', // brown
-      '#34c759', // mint
-      '#64d2ff', // sky
-      '#ffd60a', // bright yellow
     ];
     // Legacy named-color → hex shim so older saved data keeps working
     const LEGACY_NAMED_COLORS = {
@@ -2306,7 +2285,6 @@
     let userName = localStorage.getItem(KEYS.userName) || '';
     let taskDefaults = loadJSON(KEYS.defaults, { list: 'General', priority: 'Normal' });
     let reminderSettings = loadJSON(KEYS.reminderSettings, {
-      reminders_enabled: 'true',
       reminder_lead_minutes: '0',
       nudge_interval_minutes: '5',
       max_nudges: '6',
@@ -2321,7 +2299,7 @@
     let selectedTaskId = null;
     let calendarMonth = new Date().getMonth();
     let calendarYear  = new Date().getFullYear();
-    let calendarSelectedDate = null;
+    let calendarSelectedDate = todayStr();
     let pickerApply = null;
 
     function loadJSON(key, fb) {
@@ -2340,7 +2318,7 @@
       const meta = document.querySelector('meta[name="theme-color"]:not([media])');
       if (meta) meta.content = t === 'light' ? '#f5f5f7' : '#070a12';
     }
-    applyTheme(localStorage.getItem(KEYS.theme) || 'dark');
+    applyTheme('light');
 
     /* ─── Utilities ──────────────────────────────────────────────────── */
     const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
@@ -2720,7 +2698,7 @@
           currentView === 'Open Tasks' ? `${countForView('Open Tasks')} open task${countForView('Open Tasks')===1?'':'s'}.` :
           currentView === 'Completed' ? `${countForView('Completed')} task${countForView('Completed')===1?'':'s'} completed.` :
           `${countForView(currentView)} in ${currentView}.`;
-      document.getElementById('heroKicker').textContent = `${greeting}${userName ? `, ${userName}` : ''}`;
+      document.getElementById('heroKicker').textContent = greeting;
       const _viewTitles = { 'My Day': 'Today', 'Next 7 Days': 'This Week', 'Inbox': 'Inbox', 'Completed': 'Done' };
       document.getElementById('heroTitle').textContent = _viewTitles[currentView] || currentView;
       document.getElementById('heroSub').textContent = sub;
@@ -2772,15 +2750,20 @@
     /* ─── Render: task list ──────────────────────────────────────────── */
     function getVisibleTasks() {
       const q = (document.getElementById('taskSearch').value || '').trim().toLowerCase();
-      let vis = tasks.filter(t => filterByView(t, currentView));
-      if (filterList) vis = vis.filter(t => t.list === filterList);
+      let vis;
       if (q) {
-        vis = vis.filter(t => {
+        // Search spans all tasks regardless of view or list filter
+        vis = tasks.filter(t => {
           const text = [t.title, t.nextAction, t.notes, t.list, t.priority, t.dueDate, t.reminderTime,
                         ...(t.checklist || []).map(c => c.text),
                         ...(t.activityLog || []).map(a => a.text)].join(' ').toLowerCase();
           return text.includes(q);
         });
+      } else if (filterList) {
+        // List chip: show all non-done tasks in that list, ignoring view scope
+        vis = tasks.filter(t => !isDone(t) && t.list === filterList);
+      } else {
+        vis = tasks.filter(t => filterByView(t, currentView));
       }
       vis.sort((a,b) => {
         if (currentSort === 'smart')    return smartScore(a) - smartScore(b);
@@ -2834,10 +2817,10 @@
           : `<button class="complete-btn" data-done="${escapeHtml(t.id)}" aria-label="Mark done">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
              </button>`;
-        return `<div class="task-card-wrap" data-id="${escapeHtml(t.id)}" data-done="${done}">
+        return `<div class="task-card-wrap ${isAttention(t)?'attention':''}" style="--list-color:${listColor(t.list)}" data-id="${escapeHtml(t.id)}" data-done="${done}">
           ${rightUnderlay}
           <div class="swipe-underlay left">Delete<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-          <article class="task-card ${done?'done':''} ${isAttention(t)?'attention':''}" style="--list-color:${listColor(t.list)}" data-id="${escapeHtml(t.id)}">
+          <article class="task-card ${done?'done':''}" data-id="${escapeHtml(t.id)}">
             <div class="task-title">${escapeHtml(t.title)}</div>
             ${dueLine(t)}
             ${t.nextAction && !done ? `<div class="task-next"><strong>Next</strong> ${escapeHtml(t.nextAction)}</div>` : ''}
@@ -3573,7 +3556,7 @@
             <span class="pr-value ${t.repeat==='none' ? 'muted' : ''}" id="dRepeatLabel">${escapeHtml(repeatLabel(t.repeat, t.repeatEvery))}</span>
           </button>
           <button class="picker-row tappable" id="dPinBtn">
-            <span class="pr-label">Pin</span>
+            <span class="pr-label">Pin to Day</span>
             <span class="pr-value ${t.pinnedToday ? '' : 'muted'}" id="dPinLabel">${t.pinnedToday ? 'On' : 'Off'}</span>
           </button>
         </div>
@@ -3855,25 +3838,6 @@
       const themeName = document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark';
       target.innerHTML = `
         <div class="settings-group">
-          <div class="settings-group-title">Profile</div>
-          <div class="settings-card">
-            <div class="settings-row">
-              <div>
-                <div class="sr-label">Your Name</div>
-                <div class="sr-sub">Personalises the greeting.</div>
-              </div>
-            </div>
-            <div class="settings-input-row">
-              <input id="setUserName" class="input" placeholder="e.g. David" value="${escapeHtml(userName)}" />
-            </div>
-            <div class="settings-row tap" id="setThemeRow">
-              <div class="sr-label">Appearance</div>
-              <div class="chevron-wrap"><span class="sr-value">${themeName}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="settings-group">
           <div class="settings-group-title">Defaults</div>
           <div class="settings-card">
             <div class="settings-row tap" id="setDefaultListRow">
@@ -3913,16 +3877,6 @@
             </div>
             <div id="pushStatusRow" class="settings-row" style="display:none">
               <div id="pushStatusText" style="flex:1; text-align:center; font-size:13px; color: var(--muted);"></div>
-            </div>
-            <div class="settings-row">
-              <div>
-                <div class="sr-label">Reminders</div>
-                <div class="sr-sub">Master switch for time-based alerts.</div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="setRemEnabled" ${reminderSettings.reminders_enabled === 'true' ? 'checked' : ''} />
-                <span class="slider"></span>
-              </label>
             </div>
             <div class="settings-row tap" id="setNudgeRow">
               <div>
@@ -4004,19 +3958,6 @@
       `;
 
       // Wire profile
-      target.querySelector('#setUserName').addEventListener('input', e => {
-        userName = cleanText(e.target.value);
-        localStorage.setItem(KEYS.userName, userName);
-        renderHero();
-        debouncedSettingsSync();
-      });
-      target.querySelector('#setThemeRow').addEventListener('click', () => {
-        const cur = document.documentElement.dataset.theme;
-        applyTheme(cur === 'light' ? 'dark' : 'light');
-        renderSettingsBody(target);
-        debouncedSettingsSync();
-      });
-
       // Defaults
       target.querySelector('#setDefaultListRow').addEventListener('click', () => openListPicker(taskDefaults.list, v => {
         taskDefaults.list = v; saveDefaults(); renderSettingsBody(target);
@@ -4042,10 +3983,6 @@
         if (r && r.ok && r.sent > 0) showToast('Test sent to ' + r.sent + ' device(s)');
         else if (r && r.error === 'subscription_expired') showToast('Subscription expired — re-enable push');
         else showToast('No subscribers — enable push first');
-      });
-      target.querySelector('#setRemEnabled').addEventListener('change', e => {
-        reminderSettings.reminders_enabled = e.target.checked ? 'true' : 'false';
-        saveReminderSettings(); debouncedSettingsSync();
       });
       target.querySelector('#setNudgeRow').addEventListener('click', () => {
         openOptionPicker('Nudge interval', [
@@ -4101,7 +4038,7 @@
       const trashSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
       target.innerHTML = `<div class="settings-card">${customLists.map((name, idx) => `
         <div class="list-row" data-name="${escapeHtml(name)}" data-idx="${idx}">
-          <button class="ldot-btn" style="--ldot:${escapeHtml(listColor(name))}" data-color-for="${escapeHtml(name)}" aria-label="Change colour"></button>
+          <button class="ldot-btn" style="--ldot:${escapeHtml(listColor(name))}" data-color-for="${escapeHtml(name)}" aria-label="Change color"></button>
           <input class="lname-input" value="${escapeHtml(name)}" ${name === 'General' ? 'disabled' : ''} />
           <div class="lactions">
             <button class="lbtn ${idx === 0 ? 'disabled' : ''}" data-up="${idx}" aria-label="Move up">${arrowSvg}</button>
@@ -4171,7 +4108,7 @@
     /* Open the color picker — shows quick swatches + native colour wheel */
     function openColorPicker(listName) {
       const current = listColor(listName);
-      document.getElementById('pickerTitle').textContent = `${listName} · Colour`;
+      document.getElementById('pickerTitle').textContent = `${listName} · Color`;
       let chosen = current;
       const body = document.getElementById('pickerBody');
       const isStandard = (c) => COLOR_SWATCHES.some(s => s.toLowerCase() === c.toLowerCase());
@@ -4181,8 +4118,8 @@
         body.innerHTML = `
           <div class="color-popover">
             ${COLOR_SWATCHES.map(c => `<button class="cc ${c.toLowerCase() === chosen.toLowerCase() ? 'active' : ''}" style="--cc-bg:${c}" data-c="${c}"></button>`).join('')}
-            <span class="cc-custom-wrap">
-              <input type="color" class="cc-custom ${customActive ? 'active' : ''}" id="customColorInput" value="${chosen}" aria-label="Custom colour" />
+            <span class="cc-custom-wrap ${customActive ? 'active' : ''}">
+              <input type="color" class="cc-custom" id="customColorInput" value="${chosen}" aria-label="Custom color" />
               <span class="cc-custom-mark"></span>
             </span>
           </div>
@@ -4204,14 +4141,14 @@
         ci.addEventListener('input',  e => { chosen = e.target.value; render(); });
         ci.addEventListener('change', e => { chosen = e.target.value; render(); });
       };
-      setPickerActions('Use Colour');
+      setPickerActions('Use Color');
       pickerApply = () => {
         listColors[listName] = chosen;
         saveLists();
         syncListsReplace();
         renderAll();
         renderSettingsBody(settingsTarget());
-        showToast('Colour updated');
+        showToast('Color updated');
       };
       render();
       openSheet('pickerOverlay');
@@ -4437,7 +4374,7 @@
       } else if (currentView === 'Open Tasks') {
         sub = `${countForView('Open Tasks')} open task${countForView('Open Tasks')===1?'':'s'}.`;
       }
-      document.getElementById('heroKicker').textContent = `${greeting}${userName ? `, ${userName}` : ''}`;
+      document.getElementById('heroKicker').textContent = greeting;
       const _viewTitles = { 'My Day': 'Today', 'Next 7 Days': 'This Week', 'Inbox': 'Inbox', 'Completed': 'Done' };
       document.getElementById('heroTitle').textContent = _viewTitles[currentView] || currentView;
       document.getElementById('heroSub').textContent = sub;

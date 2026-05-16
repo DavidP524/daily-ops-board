@@ -9,26 +9,26 @@ const fs = require('fs');
 const webpush = require('web-push');
 const { DatabaseSync: Database } = require('node:sqlite');
 const cron = require('node-cron');
-
-// ---------------------------------------------------------------------------
-// Vercel Blob — persistent storage for cron-critical data across instances.
-// Gracefully no-ops when BLOB_READ_WRITE_TOKEN is not set.
-// ---------------------------------------------------------------------------
 const { put: blobPut, list: blobList } = require('@vercel/blob');
 
+// ---------------------------------------------------------------------------
+// Vercel Blob — persistent storage for cron-critical serverless state.
+// No-ops locally unless BLOB_READ_WRITE_TOKEN is configured.
+// ---------------------------------------------------------------------------
 async function kvSet(key, value) {
   const token = process.env.BLOB_READ_WRITE_TOKEN;
   if (!token) return;
-  // Sanitise key: replace chars that could break URL matching
   const safeName = `playbook_${key.replace(/[^a-zA-Z0-9_-]/g, '_')}.json`;
   try {
     const data = typeof value === 'string' ? value : JSON.stringify(value);
     await blobPut(safeName, data, {
-      access: 'private',       // must match store type (private store)
-      addRandomSuffix: false,  // stable pathname so we can overwrite
+      access: 'private',
+      addRandomSuffix: false,
       token,
     });
-  } catch (e) { console.error('[Blob] set error:', e.message); }
+  } catch (e) {
+    console.error('[Blob] set error:', e.message);
+  }
 }
 
 async function kvGet(key) {
@@ -38,12 +38,17 @@ async function kvGet(key) {
   try {
     const { blobs } = await blobList({ prefix: safeName, token });
     if (!blobs.length) return null;
-    // Private blobs: use downloadUrl which carries a signed auth token
     const res = await fetch(blobs[0].downloadUrl);
-    if (!res.ok) { console.error('[Blob] fetch error:', res.status, res.statusText); return null; }
+    if (!res.ok) {
+      console.error('[Blob] fetch error:', res.status, res.statusText);
+      return null;
+    }
     const text = await res.text();
     try { return JSON.parse(text); } catch { return text; }
-  } catch (e) { console.error('[Blob] get error:', e.message); return null; }
+  } catch (e) {
+    console.error('[Blob] get error:', e.message);
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -255,6 +260,13 @@ async function sendPush(payload) {
   return sent;
 }
 
+function snapshotTasksToBlob() {
+  try {
+    const all = db.prepare('SELECT * FROM tasks').all();
+    kvSet('tasks_snapshot', all.map(parseTask)).catch(() => {});
+  } catch (_) {}
+}
+
 // ---------------------------------------------------------------------------
 // Routes — Tasks
 // ---------------------------------------------------------------------------
@@ -268,14 +280,6 @@ app.get('/api/tasks/:id', (req, res) => {
   if (!row) return res.status(404).json({ error: 'Task not found' });
   res.json(parseTask(row));
 });
-
-// Snapshot all tasks to Redis so the cron can find them on cold-start instances
-function snapshotTasksToRedis() {
-  try {
-    const all = db.prepare('SELECT * FROM tasks').all();
-    kvSet('tasks_snapshot', all.map(parseTask)).catch(() => {});
-  } catch {}
-}
 
 app.post('/api/tasks', (req, res) => {
   const id = req.body.id || `t_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -314,7 +318,7 @@ app.post('/api/tasks', (req, res) => {
   `).run(task);
 
   const created = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
-  snapshotTasksToRedis();
+  snapshotTasksToBlob();
   res.status(201).json(parseTask(created));
 });
 
@@ -368,13 +372,13 @@ app.put('/api/tasks/:id', (req, res) => {
   `).run(updated);
 
   const result = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
-  snapshotTasksToRedis();
+  snapshotTasksToBlob();
   res.json(parseTask(result));
 });
 
 app.delete('/api/tasks/:id', (req, res) => {
   db.prepare('DELETE FROM tasks WHERE id = ?').run(req.params.id);
-  snapshotTasksToRedis();
+  snapshotTasksToBlob();
   res.json({ ok: true });
 });
 
@@ -486,7 +490,6 @@ app.post('/api/push/subscribe', async (req, res) => {
     VALUES (?, ?, ?)
     ON CONFLICT(endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth
   `).run(endpoint, keys.p256dh, keys.auth);
-  // Persist to Redis so the cron can find it even on cold-start instances
   await kvSet('push_subscription', { endpoint, keys });
   res.json({ ok: true });
 });
@@ -495,6 +498,7 @@ app.post('/api/push/unsubscribe', (req, res) => {
   const { endpoint } = req.body;
   if (!endpoint) return res.status(400).json({ error: 'endpoint is required' });
   db.prepare('DELETE FROM push_subscriptions WHERE endpoint = ?').run(endpoint);
+  kvSet('push_subscription', null).catch(() => {});
   res.json({ ok: true });
 });
 
@@ -569,11 +573,12 @@ app.post('/api/push/ack', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// Cron nudge logic — shared by HTTP endpoint (Vercel) and in-process fallback
+// Cron nudge logic — called by Vercel Cron endpoint and local fallback.
 // ---------------------------------------------------------------------------
 async function runNudge() {
   const settings = getSettings();
   if (settings.reminders_enabled !== 'true') return 0;
+
   const now = new Date();
   if (isInQuietHours(settings, now)) return 0;
 
@@ -581,7 +586,6 @@ async function runNudge() {
   const maxNudges = parseInt(settings.max_nudges || '6', 10);
   const defaultLead = parseInt(settings.reminder_lead_minutes || '0', 10);
 
-  // Load tasks — try DB first, fall back to Redis snapshot if DB is cold/empty
   let dbTasks = db.prepare(`
     SELECT * FROM tasks
     WHERE status != 'Completed'
@@ -590,54 +594,54 @@ async function runNudge() {
   `).all();
 
   let tasks = dbTasks;
-  let usingRedisSnapshot = false;
+  let usingBlobSnapshot = false;
 
   if (!dbTasks.length) {
     const snapshot = await kvGet('tasks_snapshot');
     if (Array.isArray(snapshot) && snapshot.length) {
       tasks = snapshot.filter(t => t.status !== 'Completed' && t.reminderTime && t.dueDate);
-      usingRedisSnapshot = true;
-      console.log(`[Cron] DB cold — using Redis snapshot (${tasks.length} reminder tasks)`);
+      usingBlobSnapshot = true;
+      console.log(`[Cron] DB cold — using Blob snapshot (${tasks.length} reminder tasks)`);
     }
   }
 
-  // Load push subscriptions — try DB first, fall back to Redis
   let subs = db.prepare('SELECT * FROM push_subscriptions').all();
-  let redisSub = null;
+  let blobSub = null;
   if (!subs.length) {
-    redisSub = await kvGet('push_subscription');
-    if (redisSub) console.log('[Cron] DB cold — using Redis push subscription');
+    blobSub = await kvGet('push_subscription');
+    if (blobSub) console.log('[Cron] DB cold — using Blob push subscription');
   }
 
-  // Helper: send to all available subscriptions
   const sendToAll = async (payload) => {
-    if (subs.length) {
-      await sendPush(payload);
-    } else if (redisSub) {
-      try {
-        await webpush.sendNotification(redisSub, JSON.stringify(payload));
-      } catch (err) {
-        if (err.statusCode === 410 || err.statusCode === 404) {
-          await kvSet('push_subscription', null);
-        } else {
-          console.error('[Push] delivery error:', err.message);
-        }
+    if (subs.length) return sendPush(payload);
+    if (!blobSub) return 0;
+    try {
+      await webpush.sendNotification(blobSub, JSON.stringify(payload));
+      return 1;
+    } catch (err) {
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        await kvSet('push_subscription', null);
+      } else {
+        console.error('[Push] delivery error:', err.message);
       }
+      return 0;
     }
   };
 
   let fired = 0;
-  const nudgeUpdates = []; // track updates when using Redis snapshot
+  const nudgeUpdates = [];
 
   for (const task of tasks) {
     const lead = parseInt(task.reminderLeadMinutes || String(defaultLead), 10);
     const dueEpoch = new Date(task.dueDate + 'T' + task.reminderTime + ':00').getTime();
     const fireEpoch = dueEpoch - lead * 60 * 1000;
 
+    if (!Number.isFinite(dueEpoch)) continue;
     if (now.getTime() < fireEpoch) continue;
 
     if (task.snoozeUntil) {
-      if (now.getTime() < new Date(task.snoozeUntil).getTime()) continue;
+      const snoozeEpoch = new Date(task.snoozeUntil).getTime();
+      if (now.getTime() < snoozeEpoch) continue;
     }
 
     let shouldFire = false;
@@ -655,13 +659,13 @@ async function runNudge() {
     if (now.getTime() - dueEpoch > 6 * 60 * 60 * 1000) continue;
     if (!shouldFire) continue;
 
-    const titlePrefix = isFirstFire ? '' : `Reminder ${task.nudgeCount + 1}: `;
+    const titlePrefix = isFirstFire ? '' : `Reminder ${Number(task.nudgeCount || 0) + 1}: `;
     const bodyParts = [];
     if (task.reminderTime) bodyParts.push(`Due at ${formatTime12(task.reminderTime)}`);
     if (task.nextAction) bodyParts.push(task.nextAction);
     const body = bodyParts.join(' — ') || 'Tap to view';
 
-    await sendToAll({
+    const sent = await sendToAll({
       title: `${titlePrefix}${task.title}`,
       body,
       icon: '/icons/icon-192.png',
@@ -676,26 +680,34 @@ async function runNudge() {
       data: { taskId: task.id, url: '/' },
     });
 
-    if (!usingRedisSnapshot) {
+    if (!sent) continue;
+
+    if (!usingBlobSnapshot) {
       db.prepare(`
         UPDATE tasks SET lastNudgedAt = ?, nudgeCount = nudgeCount + 1, snoozeUntil = ''
         WHERE id = ?
       `).run(now.toISOString(), task.id);
     } else {
-      // Track nudge state updates to write back to Redis snapshot
-      nudgeUpdates.push({ id: task.id, lastNudgedAt: now.toISOString(), nudgeCount: (task.nudgeCount || 0) + 1 });
+      nudgeUpdates.push({
+        id: task.id,
+        lastNudgedAt: now.toISOString(),
+        nudgeCount: Number(task.nudgeCount || 0) + 1,
+      });
     }
 
     fired++;
   }
 
-  // Write nudge state back to Redis snapshot if we used it
-  if (usingRedisSnapshot && nudgeUpdates.length) {
+  if (usingBlobSnapshot && nudgeUpdates.length) {
     const fullSnapshot = await kvGet('tasks_snapshot');
     if (Array.isArray(fullSnapshot)) {
       nudgeUpdates.forEach(u => {
-        const t = fullSnapshot.find(x => x.id === u.id);
-        if (t) { t.lastNudgedAt = u.lastNudgedAt; t.nudgeCount = u.nudgeCount; t.snoozeUntil = ''; }
+        const task = fullSnapshot.find(t => t.id === u.id);
+        if (task) {
+          task.lastNudgedAt = u.lastNudgedAt;
+          task.nudgeCount = u.nudgeCount;
+          task.snoozeUntil = '';
+        }
       });
       await kvSet('tasks_snapshot', fullSnapshot);
     }
@@ -704,17 +716,12 @@ async function runNudge() {
   return fired;
 }
 
-// HTTP cron endpoint — called by Vercel's native cron scheduler every minute.
-// Vercel sends: Authorization: Bearer <CRON_SECRET>
-// Local dev: no auth required (CRON_SECRET not set).
-app.post('/api/cron/nudge', async (req, res) => {
+app.all('/api/cron/nudge', async (req, res) => {
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = req.headers['authorization'];
-    if (auth !== `Bearer ${secret}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
+  if (secret && req.headers.authorization !== `Bearer ${secret}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
+
   try {
     const fired = await runNudge();
     res.json({ ok: true, fired });
@@ -724,33 +731,6 @@ app.post('/api/cron/nudge', async (req, res) => {
   }
 });
 
-// Debug endpoint — shows what the cron would see (subscription + tasks).
-// Protected by CRON_SECRET so only you can call it.
-app.get('/api/debug/cron', async (req, res) => {
-  const secret = process.env.CRON_SECRET;
-  if (secret && req.headers['authorization'] !== `Bearer ${secret}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const dbSubs = db.prepare('SELECT endpoint FROM push_subscriptions').all();
-  const dbTasks = db.prepare("SELECT id,title,dueDate,reminderTime,status FROM tasks WHERE reminderTime != '' AND dueDate != ''").all();
-  const blobSub = await kvGet('push_subscription');
-  const blobTasks = await kvGet('tasks_snapshot');
-  res.json({
-    blobToken: !!process.env.BLOB_READ_WRITE_TOKEN,
-    db: { subscriptions: dbSubs.length, reminderTasks: dbTasks.length, tasks: dbTasks },
-    blob: {
-      hasSubscription: !!blobSub,
-      subscriptionEndpoint: blobSub ? blobSub.endpoint?.slice(0, 60) + '…' : null,
-      taskCount: Array.isArray(blobTasks) ? blobTasks.length : 0,
-      reminderTasks: Array.isArray(blobTasks)
-        ? blobTasks.filter(t => t.reminderTime && t.dueDate && t.status !== 'Completed')
-            .map(t => ({ id: t.id, title: t.title, dueDate: t.dueDate, reminderTime: t.reminderTime }))
-        : [],
-    },
-  });
-});
-
-// In-process fallback for local development (won't fire on Vercel).
 if (process.env.NODE_ENV !== 'production') {
   cron.schedule('* * * * *', () => runNudge().catch(e => console.error('[Cron]', e.message)));
 }

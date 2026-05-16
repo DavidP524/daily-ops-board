@@ -2,6 +2,7 @@
 node_modules/
 .env
 data/
+.cron-secret.local
 
 .vercel
 .claude/
