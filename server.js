@@ -11,6 +11,36 @@ const { DatabaseSync: Database } = require('node:sqlite');
 const cron = require('node-cron');
 
 // ---------------------------------------------------------------------------
+// Upstash Redis — persistent KV store for cron-critical data across instances
+// Uses plain fetch (no SDK). Gracefully no-ops when env vars not set.
+// ---------------------------------------------------------------------------
+const UPSTASH_URL   = process.env.UPSTASH_REDIS_REST_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+async function kvSet(key, value) {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) return;
+  try {
+    await fetch(`${UPSTASH_URL}/set/${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(typeof value === 'string' ? value : JSON.stringify(value)),
+    });
+  } catch (e) { console.error('[KV] set error:', e.message); }
+}
+
+async function kvGet(key) {
+  if (!UPSTASH_URL || !UPSTASH_TOKEN) return null;
+  try {
+    const res = await fetch(`${UPSTASH_URL}/get/${encodeURIComponent(key)}`, {
+      headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` },
+    });
+    const { result } = await res.json();
+    if (!result) return null;
+    try { return JSON.parse(result); } catch { return result; }
+  } catch (e) { console.error('[KV] get error:', e.message); return null; }
+}
+
+// ---------------------------------------------------------------------------
 // VAPID key bootstrap
 // ---------------------------------------------------------------------------
 (function ensureVapidKeys() {
@@ -233,6 +263,14 @@ app.get('/api/tasks/:id', (req, res) => {
   res.json(parseTask(row));
 });
 
+// Snapshot all tasks to Redis so the cron can find them on cold-start instances
+function snapshotTasksToRedis() {
+  try {
+    const all = db.prepare('SELECT * FROM tasks').all();
+    kvSet('tasks:snapshot', all.map(parseTask)).catch(() => {});
+  } catch {}
+}
+
 app.post('/api/tasks', (req, res) => {
   const id = req.body.id || `t_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   const now = new Date().toISOString();
@@ -270,6 +308,7 @@ app.post('/api/tasks', (req, res) => {
   `).run(task);
 
   const created = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+  snapshotTasksToRedis();
   res.status(201).json(parseTask(created));
 });
 
@@ -323,11 +362,13 @@ app.put('/api/tasks/:id', (req, res) => {
   `).run(updated);
 
   const result = db.prepare('SELECT * FROM tasks WHERE id = ?').get(req.params.id);
+  snapshotTasksToRedis();
   res.json(parseTask(result));
 });
 
 app.delete('/api/tasks/:id', (req, res) => {
   db.prepare('DELETE FROM tasks WHERE id = ?').run(req.params.id);
+  snapshotTasksToRedis();
   res.json({ ok: true });
 });
 
@@ -429,7 +470,7 @@ app.get('/api/push/vapid-public-key', (_req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY });
 });
 
-app.post('/api/push/subscribe', (req, res) => {
+app.post('/api/push/subscribe', async (req, res) => {
   const { endpoint, keys } = req.body;
   if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
     return res.status(400).json({ error: 'Invalid subscription object' });
@@ -439,6 +480,8 @@ app.post('/api/push/subscribe', (req, res) => {
     VALUES (?, ?, ?)
     ON CONFLICT(endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth
   `).run(endpoint, keys.p256dh, keys.auth);
+  // Persist to Redis so the cron can find it even on cold-start instances
+  await kvSet('push:subscription', { endpoint, keys });
   res.json({ ok: true });
 });
 
@@ -532,14 +575,54 @@ async function runNudge() {
   const maxNudges = parseInt(settings.max_nudges || '6', 10);
   const defaultLead = parseInt(settings.reminder_lead_minutes || '0', 10);
 
-  const tasks = db.prepare(`
+  // Load tasks — try DB first, fall back to Redis snapshot if DB is cold/empty
+  let dbTasks = db.prepare(`
     SELECT * FROM tasks
     WHERE status != 'Completed'
       AND reminderTime != ''
       AND dueDate != ''
   `).all();
 
+  let tasks = dbTasks;
+  let usingRedisSnapshot = false;
+
+  if (!dbTasks.length) {
+    const snapshot = await kvGet('tasks:snapshot');
+    if (Array.isArray(snapshot) && snapshot.length) {
+      tasks = snapshot.filter(t => t.status !== 'Completed' && t.reminderTime && t.dueDate);
+      usingRedisSnapshot = true;
+      console.log(`[Cron] DB cold — using Redis snapshot (${tasks.length} reminder tasks)`);
+    }
+  }
+
+  // Load push subscriptions — try DB first, fall back to Redis
+  let subs = db.prepare('SELECT * FROM push_subscriptions').all();
+  let redisSub = null;
+  if (!subs.length) {
+    redisSub = await kvGet('push:subscription');
+    if (redisSub) console.log('[Cron] DB cold — using Redis push subscription');
+  }
+
+  // Helper: send to all available subscriptions
+  const sendToAll = async (payload) => {
+    if (subs.length) {
+      await sendPush(payload);
+    } else if (redisSub) {
+      try {
+        await webpush.sendNotification(redisSub, JSON.stringify(payload));
+      } catch (err) {
+        if (err.statusCode === 410 || err.statusCode === 404) {
+          await kvSet('push:subscription', null);
+        } else {
+          console.error('[Push] delivery error:', err.message);
+        }
+      }
+    }
+  };
+
   let fired = 0;
+  const nudgeUpdates = []; // track updates when using Redis snapshot
+
   for (const task of tasks) {
     const lead = parseInt(task.reminderLeadMinutes || String(defaultLead), 10);
     const dueEpoch = new Date(task.dueDate + 'T' + task.reminderTime + ':00').getTime();
@@ -572,7 +655,7 @@ async function runNudge() {
     if (task.nextAction) bodyParts.push(task.nextAction);
     const body = bodyParts.join(' — ') || 'Tap to view';
 
-    await sendPush({
+    await sendToAll({
       title: `${titlePrefix}${task.title}`,
       body,
       icon: '/icons/icon-192.png',
@@ -587,13 +670,31 @@ async function runNudge() {
       data: { taskId: task.id, url: '/' },
     });
 
-    db.prepare(`
-      UPDATE tasks SET lastNudgedAt = ?, nudgeCount = nudgeCount + 1, snoozeUntil = ''
-      WHERE id = ?
-    `).run(now.toISOString(), task.id);
+    if (!usingRedisSnapshot) {
+      db.prepare(`
+        UPDATE tasks SET lastNudgedAt = ?, nudgeCount = nudgeCount + 1, snoozeUntil = ''
+        WHERE id = ?
+      `).run(now.toISOString(), task.id);
+    } else {
+      // Track nudge state updates to write back to Redis snapshot
+      nudgeUpdates.push({ id: task.id, lastNudgedAt: now.toISOString(), nudgeCount: (task.nudgeCount || 0) + 1 });
+    }
 
     fired++;
   }
+
+  // Write nudge state back to Redis snapshot if we used it
+  if (usingRedisSnapshot && nudgeUpdates.length) {
+    const fullSnapshot = await kvGet('tasks:snapshot');
+    if (Array.isArray(fullSnapshot)) {
+      nudgeUpdates.forEach(u => {
+        const t = fullSnapshot.find(x => x.id === u.id);
+        if (t) { t.lastNudgedAt = u.lastNudgedAt; t.nudgeCount = u.nudgeCount; t.snoozeUntil = ''; }
+      });
+      await kvSet('tasks:snapshot', fullSnapshot);
+    }
+  }
+
   return fired;
 }
 
