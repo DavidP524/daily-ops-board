@@ -655,23 +655,26 @@ async function runNudge() {
   const maxNudges = parseInt(settings.max_nudges || '6', 10);
   const defaultLead = parseInt(settings.reminder_lead_minutes || '0', 10);
 
-  let dbTasks = db.prepare(`
-    SELECT * FROM tasks
-    WHERE status != 'Completed'
-      AND reminderTime != ''
-      AND dueDate != ''
-  `).all();
-
-  let tasks = dbTasks;
+  // Always read from Blob snapshot first — it's the canonical persistent store
+  // updated by every task PUT/POST. SQLite on a warm instance may be stale
+  // (e.g. a reschedule landed on a different function instance), so trusting
+  // it over Blob causes missed notifications after time changes.
+  const snapshot = await kvGet('tasks_snapshot');
+  let tasks;
   let usingBlobSnapshot = false;
 
-  if (!dbTasks.length) {
-    const snapshot = await kvGet('tasks_snapshot');
-    if (Array.isArray(snapshot) && snapshot.length) {
-      tasks = snapshot.filter(t => t.status !== 'Completed' && t.reminderTime && t.dueDate);
-      usingBlobSnapshot = true;
-      console.log(`[Cron] DB cold — using Blob snapshot (${tasks.length} reminder tasks)`);
-    }
+  if (Array.isArray(snapshot) && snapshot.length) {
+    tasks = snapshot.filter(t => t.status !== 'Completed' && t.reminderTime && t.dueDate);
+    usingBlobSnapshot = true;
+    console.log(`[Cron] Using Blob snapshot (${tasks.length} reminder tasks)`);
+  } else {
+    tasks = db.prepare(`
+      SELECT * FROM tasks
+      WHERE status != 'Completed'
+        AND reminderTime != ''
+        AND dueDate != ''
+    `).all();
+    console.log(`[Cron] Blob unavailable — falling back to SQLite (${tasks.length} tasks)`);
   }
 
   let subs = db.prepare('SELECT * FROM push_subscriptions').all();
