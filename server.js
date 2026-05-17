@@ -90,6 +90,7 @@ webpush.setVapidDetails(
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'ops.db');
 
 let db;
+let dbIsMemory = false;
 try {
   // Always attempt to create the directory — mkdirSync with recursive:true
   // is idempotent and avoids races where existsSync returns true but the
@@ -99,6 +100,7 @@ try {
 } catch (err) {
   console.error('[DB] Failed to open', DB_PATH, '—', err.message, '— falling back to :memory:');
   db = new Database(':memory:');
+  dbIsMemory = true;
 }
 
 db.exec('PRAGMA journal_mode = WAL');
@@ -189,6 +191,56 @@ if (settingsCount.cnt === 0) {
 }
 
 // ---------------------------------------------------------------------------
+// Cold-start restore — on :memory: instances, reload tasks + subscription
+// from Blob before handling any request so all endpoints see real data.
+// ---------------------------------------------------------------------------
+let _restorePromise = null;
+
+function ensureRestored() {
+  if (!dbIsMemory) return Promise.resolve();
+  if (_restorePromise) return _restorePromise;
+  _restorePromise = (async () => {
+    try {
+      const [snapshot, sub] = await Promise.all([
+        kvGet('tasks_snapshot'),
+        kvGet('push_subscription'),
+      ]);
+
+      if (Array.isArray(snapshot) && snapshot.length) {
+        const insert = db.prepare(`
+          INSERT OR REPLACE INTO tasks (
+            id, title, nextAction, list, dueDate, reminderTime, reminderLeadMinutes,
+            priority, status, notes, links, checklist, activityLog, pinnedToday,
+            repeat, repeatEvery, lastNudgedAt, nudgeCount, snoozeUntil, createdAt, updatedAt
+          ) VALUES (
+            @id, @title, @nextAction, @list, @dueDate, @reminderTime, @reminderLeadMinutes,
+            @priority, @status, @notes, @links, @checklist, @activityLog, @pinnedToday,
+            @repeat, @repeatEvery, @lastNudgedAt, @nudgeCount, @snoozeUntil, @createdAt, @updatedAt
+          )`);
+        const many = db.transaction(tasks => {
+          for (const t of tasks) {
+            try { insert.run(stringifyTask(t)); } catch (_) {}
+          }
+        });
+        many(snapshot);
+        console.log(`[DB] Cold-start restore: ${snapshot.length} tasks from Blob`);
+      }
+
+      if (sub && sub.endpoint && sub.keys) {
+        db.prepare(`
+          INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth)
+          VALUES (?, ?, ?)
+        `).run(sub.endpoint, sub.keys.p256dh, sub.keys.auth);
+        console.log('[DB] Cold-start restore: push subscription from Blob');
+      }
+    } catch (e) {
+      console.error('[DB] Cold-start restore error:', e.message);
+    }
+  })();
+  return _restorePromise;
+}
+
+// ---------------------------------------------------------------------------
 // Express app
 // ---------------------------------------------------------------------------
 const app = express();
@@ -197,6 +249,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// On cold-start (:memory: mode), restore tasks + subscription from Blob
+// before any route handler runs. Fire-and-forget errors so requests still
+// proceed even if Blob is temporarily unavailable.
+app.use((req, res, next) => { ensureRestored().then(next).catch(() => next()); });
 
 // ---------------------------------------------------------------------------
 // Helpers
