@@ -271,6 +271,7 @@ async function sendPush(payload) {
 function snapshotTasksToBlob() {
   try {
     const all = db.prepare('SELECT * FROM tasks').all();
+    if (!all.length) return; // Never overwrite Blob with empty — cold-start instances have no tasks
     kvSet('tasks_snapshot', all.map(parseTask)).catch(() => {});
   } catch (_) {}
 }
