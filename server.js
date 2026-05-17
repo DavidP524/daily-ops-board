@@ -24,6 +24,7 @@ async function kvSet(key, value) {
     await blobPut(safeName, data, {
       access: 'private',
       addRandomSuffix: false,
+      allowOverwrite: true,
       token,
     });
   } catch (e) {
@@ -38,7 +39,9 @@ async function kvGet(key) {
   try {
     const { blobs } = await blobList({ prefix: safeName, token });
     if (!blobs.length) return null;
-    const res = await fetch(blobs[0].downloadUrl);
+    const res = await fetch(blobs[0].downloadUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (!res.ok) {
       console.error('[Blob] fetch error:', res.status, res.statusText);
       return null;
