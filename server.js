@@ -84,12 +84,20 @@ webpush.setVapidDetails(
 // ---------------------------------------------------------------------------
 // Database setup
 // ---------------------------------------------------------------------------
-const dbDir = path.dirname(process.env.DB_PATH || path.join(__dirname, 'data', 'ops.db'));
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data', 'ops.db');
+
+let db;
+try {
+  // Always attempt to create the directory — mkdirSync with recursive:true
+  // is idempotent and avoids races where existsSync returns true but the
+  // directory isn't writable (common on Vercel Fluid compute cold starts).
+  fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+  db = new Database(DB_PATH);
+} catch (err) {
+  console.error('[DB] Failed to open', DB_PATH, '—', err.message, '— falling back to :memory:');
+  db = new Database(':memory:');
 }
 
-const db = new Database(process.env.DB_PATH || path.join(__dirname, 'data', 'ops.db'));
 db.exec('PRAGMA journal_mode = WAL');
 
 db.exec(`
